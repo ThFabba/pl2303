@@ -174,10 +174,27 @@ Pl2303DispatchPower(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp)
 {
-    UNREFERENCED_PARAMETER(DeviceObject);
-    UNREFERENCED_PARAMETER(Irp);
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_EXTENSION DeviceExtension;
 
     PAGED_CODE();
 
-    return STATUS_NOT_IMPLEMENTED;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    ASSERT(IoStack->MajorFunction == IRP_MJ_POWER);
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    if (DeviceExtension->PnpState == Deleted)
+    {
+        PoStartNextPowerIrp(Irp);
+        Status = STATUS_NO_SUCH_DEVICE;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
+    PoStartNextPowerIrp(Irp);
+    IoSkipCurrentIrpStackLocation(Irp);
+    return PoCallDriver(DeviceObject, Irp);
 }
