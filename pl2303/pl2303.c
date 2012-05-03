@@ -99,12 +99,72 @@ Pl2303DispatchPnp(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp)
 {
-    UNREFERENCED_PARAMETER(DeviceObject);
-    UNREFERENCED_PARAMETER(Irp);
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_EXTENSION DeviceExtension;
 
     PAGED_CODE();
 
-    return STATUS_NOT_IMPLEMENTED;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    ASSERT(IoStack->MajorFunction == IRP_MJ_PNP);
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    if (DeviceExtension->PnpState == Deleted)
+    {
+        Status = STATUS_NO_SUCH_DEVICE;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
+    switch (IoStack->MinorFunction)
+    {
+        case IRP_MN_START_DEVICE:
+            if (IoForwardIrpSynchronously(DeviceExtension->NextDevice, Irp))
+                Status = Irp->IoStatus.Status;
+            else
+                Status = STATUS_UNSUCCESSFUL;
+
+            if (NT_SUCCESS(Status))
+                DeviceExtension->PnpState = Started;
+
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
+        case IRP_MN_QUERY_STOP_DEVICE:
+            DeviceExtension->PreviousPnpState = DeviceExtension->PnpState;
+            DeviceExtension->PnpState = StopPending;
+            break;
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+            DeviceExtension->PreviousPnpState = DeviceExtension->PnpState;
+            DeviceExtension->PnpState = RemovePending;
+            break;
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
+        case IRP_MN_CANCEL_STOP_DEVICE:
+            DeviceExtension->PnpState = DeviceExtension->PreviousPnpState;
+            break;
+        case IRP_MN_STOP_DEVICE:
+            DeviceExtension->PnpState = Stopped;
+            break;
+        case IRP_MN_SURPRISE_REMOVAL:
+            DeviceExtension->PnpState = SurpriseRemovePending;
+            break;
+        case IRP_MN_REMOVE_DEVICE:
+            DeviceExtension->PnpState = Deleted;
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Status = IoCallDriver(DeviceExtension->NextDevice, Irp);
+            IoDetachDevice(DeviceExtension->NextDevice);
+            IoDeleteDevice(DeviceObject);
+            return Status;
+        default:
+            /* Unsupported request - leave Irp->IoStack.Status untouched */
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(DeviceExtension->NextDevice, Irp);
+    }
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoSkipCurrentIrpStackLocation(Irp);
+    return IoCallDriver(DeviceExtension->NextDevice, Irp);
 }
 
 static
