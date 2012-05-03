@@ -358,6 +358,9 @@
   <ItemGroup>
     <ClCompile Include="pl2303.c" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pl2303.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

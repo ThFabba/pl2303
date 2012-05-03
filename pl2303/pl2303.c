@@ -1,4 +1,4 @@
-#include <Ntddk.h>
+#include "pl2303.h"
 
 DRIVER_INITIALIZE DriverEntry;
 static DRIVER_UNLOAD Pl2303Unload;
@@ -53,12 +53,43 @@ Pl2303AddDevice(
     _In_ PDRIVER_OBJECT DriverObject,
     _In_ PDEVICE_OBJECT PhysicalDeviceObject)
 {
-    UNREFERENCED_PARAMETER(DriverObject);
-    UNREFERENCED_PARAMETER(PhysicalDeviceObject);
+    NTSTATUS Status;
+    PDEVICE_OBJECT DeviceObject;
+    PDEVICE_EXTENSION DeviceExtension;
 
     PAGED_CODE();
 
-    return STATUS_NOT_IMPLEMENTED;
+    /* TODO: IoCreateDeviceSecure? */
+    Status = IoCreateDevice(DriverObject,
+                            sizeof(DEVICE_EXTENSION),
+                            NULL,
+                            FILE_DEVICE_SERIAL_PORT,
+                            FILE_DEVICE_SECURE_OPEN, /* TODO: ? */
+                            FALSE,
+                            &DeviceObject);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    /* TODO: verify we can do this */
+    DeviceObject->Flags |= DO_POWER_PAGABLE;
+
+    DeviceObject->Flags |= DO_DIRECT_IO;
+
+    /* TODO: IoAttachDeviceToDeviceStackSafe? */
+    DeviceExtension->NextDevice = IoAttachDeviceToDeviceStack(DeviceObject,
+                                                              PhysicalDeviceObject);
+    if (!DeviceExtension->NextDevice)
+    {
+        IoDeleteDevice(DeviceObject);
+        return STATUS_NO_SUCH_DEVICE;
+    }
+
+    DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+
+    return STATUS_SUCCESS;
 }
 
 static
