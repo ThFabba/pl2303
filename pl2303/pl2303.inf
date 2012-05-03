@@ -1,0 +1,46 @@
+;
+; pl2303.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=Ports
+ClassGuid={4D36E978-E325-11CE-BFC1-08002BE10318}
+Provider=%ProviderName%
+DriverVer=
+CatalogFile=
+
+[DestinationDirs]
+DefaultDestDir=12
+
+[SourceDisksNames]
+1=%DiskName%,,,""
+
+[SourceDisksFiles]
+pl2303.sys=1
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%DeviceDesc%=Install.NT$ARCH$,USB\VID_067B&PID_2303
+
+[Install.NT$ARCH$]
+CopyFiles=@pl2303.sys
+
+[Install.Services.NT$ARCH$]
+AddService=pl2303,2,Service_Install
+
+[Service_Install.NT$ARCH$]
+DisplayName=%ServiceDesc%
+ServiceType=1                   ; SERVICE_KERNEL_DRIVER
+StartType=3                     ; SERVICE_DEMAND_START
+ErrorControl=1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary=%12%\pl2303.sys
+
+[Strings]
+ManufacturerName="Prolific"
+DiskName="pl2303 Source Disk"
+ProviderName="Thomas Faber"
+DeviceDesc="Prolific PL2303 USB to Serial Converter"
+ServiceDesc="Prolific serial port driver"
