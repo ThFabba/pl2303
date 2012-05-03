@@ -1,4 +1,10 @@
-syntax: glob
+syntax: regexp
 ^2003Debug/
 ^pl2303/2003Debug/
 ^pl2303 Package/2003Debug/
+
+syntax: glob
+*.opensdf
+*.sdf
+*.v11.suo
+*.vcxproj.user
