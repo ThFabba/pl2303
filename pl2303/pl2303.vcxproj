@@ -177,10 +177,11 @@
       <Version>0.0</Version>
     </Link>
     <Inf>
-      <TimeStamp>0.0.0.0</TimeStamp>
+      <TimeStamp>*</TimeStamp>
     </Inf>
     <Inf>
       <CatalogFileName>pl2303.cat</CatalogFileName>
+      <SpecifyDriverVerDirectiveVersion>true</SpecifyDriverVerDirectiveVersion>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='2003 Debug|Win32'">
@@ -188,10 +189,11 @@
       <Version>0.0</Version>
     </Link>
     <Inf>
-      <TimeStamp>0.0.0.0</TimeStamp>
+      <TimeStamp>*</TimeStamp>
     </Inf>
     <Inf>
       <CatalogFileName>pl2303.cat</CatalogFileName>
+      <SpecifyDriverVerDirectiveVersion>true</SpecifyDriverVerDirectiveVersion>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8 beta Release|Win32'">
@@ -199,10 +201,11 @@
       <Version>0.0</Version>
     </Link>
     <Inf>
-      <TimeStamp>0.0.0.0</TimeStamp>
+      <TimeStamp>*</TimeStamp>
     </Inf>
     <Inf>
       <CatalogFileName>pl2303.cat</CatalogFileName>
+      <SpecifyDriverVerDirectiveVersion>true</SpecifyDriverVerDirectiveVersion>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Debug|Win32'">
@@ -210,10 +213,11 @@
       <Version>0.0</Version>
     </Link>
     <Inf>
-      <TimeStamp>0.0.0.0</TimeStamp>
+      <TimeStamp>*</TimeStamp>
     </Inf>
     <Inf>
       <CatalogFileName>pl2303.cat</CatalogFileName>
+      <SpecifyDriverVerDirectiveVersion>true</SpecifyDriverVerDirectiveVersion>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8 beta Debug|Win32'">
@@ -221,10 +225,11 @@
       <Version>0.0</Version>
     </Link>
     <Inf>
-      <TimeStamp>0.0.0.0</TimeStamp>
+      <TimeStamp>*</TimeStamp>
     </Inf>
     <Inf>
       <CatalogFileName>pl2303.cat</CatalogFileName>
+      <SpecifyDriverVerDirectiveVersion>true</SpecifyDriverVerDirectiveVersion>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Vista Debug|Win32'">
@@ -232,10 +237,11 @@
       <Version>0.0</Version>
     </Link>
     <Inf>
-      <TimeStamp>0.0.0.0</TimeStamp>
+      <TimeStamp>*</TimeStamp>
     </Inf>
     <Inf>
       <CatalogFileName>pl2303.cat</CatalogFileName>
+      <SpecifyDriverVerDirectiveVersion>true</SpecifyDriverVerDirectiveVersion>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='2003 Release|Win32'">
@@ -243,10 +249,11 @@
       <Version>0.0</Version>
     </Link>
     <Inf>
-      <TimeStamp>0.0.0.0</TimeStamp>
+      <TimeStamp>*</TimeStamp>
     </Inf>
     <Inf>
       <CatalogFileName>pl2303.cat</CatalogFileName>
+      <SpecifyDriverVerDirectiveVersion>true</SpecifyDriverVerDirectiveVersion>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Release|Win32'">
@@ -254,10 +261,11 @@
       <Version>0.0</Version>
     </Link>
     <Inf>
-      <TimeStamp>0.0.0.0</TimeStamp>
+      <TimeStamp>*</TimeStamp>
     </Inf>
     <Inf>
       <CatalogFileName>pl2303.cat</CatalogFileName>
+      <SpecifyDriverVerDirectiveVersion>true</SpecifyDriverVerDirectiveVersion>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Vista Release|x64'">
@@ -265,10 +273,11 @@
       <Version>0.0</Version>
     </Link>
     <Inf>
-      <TimeStamp>0.0.0.0</TimeStamp>
+      <TimeStamp>*</TimeStamp>
     </Inf>
     <Inf>
       <CatalogFileName>pl2303.cat</CatalogFileName>
+      <SpecifyDriverVerDirectiveVersion>true</SpecifyDriverVerDirectiveVersion>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='2003 Debug|x64'">
@@ -276,10 +285,11 @@
       <Version>0.0</Version>
     </Link>
     <Inf>
-      <TimeStamp>0.0.0.0</TimeStamp>
+      <TimeStamp>*</TimeStamp>
     </Inf>
     <Inf>
       <CatalogFileName>pl2303.cat</CatalogFileName>
+      <SpecifyDriverVerDirectiveVersion>true</SpecifyDriverVerDirectiveVersion>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8 beta Release|x64'">
@@ -287,10 +297,11 @@
       <Version>0.0</Version>
     </Link>
     <Inf>
-      <TimeStamp>0.0.0.0</TimeStamp>
+      <TimeStamp>*</TimeStamp>
     </Inf>
     <Inf>
       <CatalogFileName>pl2303.cat</CatalogFileName>
+      <SpecifyDriverVerDirectiveVersion>true</SpecifyDriverVerDirectiveVersion>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Debug|x64'">
@@ -298,10 +309,11 @@
       <Version>0.0</Version>
     </Link>
     <Inf>
-      <TimeStamp>0.0.0.0</TimeStamp>
+      <TimeStamp>*</TimeStamp>
     </Inf>
     <Inf>
       <CatalogFileName>pl2303.cat</CatalogFileName>
+      <SpecifyDriverVerDirectiveVersion>true</SpecifyDriverVerDirectiveVersion>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8 beta Debug|x64'">
@@ -309,10 +321,11 @@
       <Version>0.0</Version>
     </Link>
     <Inf>
-      <TimeStamp>0.0.0.0</TimeStamp>
+      <TimeStamp>*</TimeStamp>
     </Inf>
     <Inf>
       <CatalogFileName>pl2303.cat</CatalogFileName>
+      <SpecifyDriverVerDirectiveVersion>true</SpecifyDriverVerDirectiveVersion>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Vista Debug|x64'">
@@ -320,10 +333,11 @@
       <Version>0.0</Version>
     </Link>
     <Inf>
-      <TimeStamp>0.0.0.0</TimeStamp>
+      <TimeStamp>*</TimeStamp>
     </Inf>
     <Inf>
       <CatalogFileName>pl2303.cat</CatalogFileName>
+      <SpecifyDriverVerDirectiveVersion>true</SpecifyDriverVerDirectiveVersion>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='2003 Release|x64'">
@@ -331,10 +345,11 @@
       <Version>0.0</Version>
     </Link>
     <Inf>
-      <TimeStamp>0.0.0.0</TimeStamp>
+      <TimeStamp>*</TimeStamp>
     </Inf>
     <Inf>
       <CatalogFileName>pl2303.cat</CatalogFileName>
+      <SpecifyDriverVerDirectiveVersion>true</SpecifyDriverVerDirectiveVersion>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Release|x64'">
@@ -342,10 +357,11 @@
       <Version>0.0</Version>
     </Link>
     <Inf>
-      <TimeStamp>0.0.0.0</TimeStamp>
+      <TimeStamp>*</TimeStamp>
     </Inf>
     <Inf>
       <CatalogFileName>pl2303.cat</CatalogFileName>
+      <SpecifyDriverVerDirectiveVersion>true</SpecifyDriverVerDirectiveVersion>
     </Inf>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -20,18 +20,18 @@ DefaultDestDir=12
 pl2303.sys=1
 
 [Manufacturer]
-%ManufacturerName%=Standard,NT$ARCH$
+%ManufacturerName%=Models,NT$ARCH$
 
-[Standard.NT$ARCH$]
-%DeviceDesc%=Install.NT$ARCH$,USB\VID_067B&PID_2303
+[Models.NT$ARCH$]
+%DeviceDesc%=DefaultInstall.NT,USB\VID_067B&PID_2303
 
-[Install.NT$ARCH$]
+[DefaultInstall.NT]
 CopyFiles=@pl2303.sys
 
-[Install.Services.NT$ARCH$]
-AddService=pl2303,2,Service_Install
+[DefaultInstall.NT.Services]
+AddService=pl2303,2,Service_Install.NT
 
-[Service_Install.NT$ARCH$]
+[Service_Install.NT]
 DisplayName=%ServiceDesc%
 ServiceType=1                   ; SERVICE_KERNEL_DRIVER
 StartType=3                     ; SERVICE_DEMAND_START
