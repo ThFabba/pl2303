@@ -7,6 +7,9 @@ __drv_dispatchType(IRP_MJ_PNP)
 static DRIVER_DISPATCH Pl2303DispatchPnp;
 __drv_dispatchType(IRP_MJ_POWER)
 static DRIVER_DISPATCH Pl2303DispatchPower;
+__drv_dispatchType(IRP_MJ_CREATE)
+__drv_dispatchType(IRP_MJ_CLOSE)
+static DRIVER_DISPATCH Pl2303DispatchCreateClose;
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(INIT, DriverEntry)
@@ -14,6 +17,7 @@ static DRIVER_DISPATCH Pl2303DispatchPower;
 #pragma alloc_text(PAGE, Pl2303AddDevice)
 #pragma alloc_text(PAGE, Pl2303DispatchPnp)
 #pragma alloc_text(PAGE, Pl2303DispatchPower)
+#pragma alloc_text(PAGE, Pl2303DispatchCreateClose)
 #endif /* defined ALLOC_PRAGMA */
 
 NTSTATUS
@@ -31,6 +35,8 @@ DriverEntry(
     DriverObject->DriverExtension->AddDevice = Pl2303AddDevice;
     DriverObject->MajorFunction[IRP_MJ_PNP] = Pl2303DispatchPnp;
     DriverObject->MajorFunction[IRP_MJ_POWER] = Pl2303DispatchPower;
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = Pl2303DispatchCreateClose;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = Pl2303DispatchCreateClose;
 
     return STATUS_SUCCESS;
 }
@@ -197,4 +203,28 @@ Pl2303DispatchPower(
     PoStartNextPowerIrp(Irp);
     IoSkipCurrentIrpStackLocation(Irp);
     return PoCallDriver(DeviceObject, Irp);
+}
+
+static
+NTSTATUS
+NTAPI
+Pl2303DispatchCreateClose(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp)
+{
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    PAGED_CODE();
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    ASSERT(IoStack->MajorFunction == IRP_MJ_CREATE ||
+           IoStack->MajorFunction == IRP_MJ_CLOSE);
+
+    Status = STATUS_SUCCESS;
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
 }
