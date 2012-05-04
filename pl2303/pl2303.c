@@ -1,3 +1,4 @@
+#define INITGUID
 #include "pl2303.h"
 
 DRIVER_INITIALIZE DriverEntry;
@@ -97,6 +98,18 @@ Pl2303AddDevice(
         return STATUS_NO_SUCH_DEVICE;
     }
 
+    Status = IoRegisterDeviceInterface(PhysicalDeviceObject,
+                                       &GUID_DEVINTERFACE_COMPORT,
+                                       NULL,
+                                       &DeviceExtension->SymbolicLinkName);
+
+    if (!NT_SUCCESS(Status))
+    {
+        IoDetachDevice(DeviceExtension->NextDevice);
+        IoDeleteDevice(DeviceObject);
+        return Status;
+    }
+
     DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
     return STATUS_SUCCESS;
@@ -137,7 +150,12 @@ Pl2303DispatchPnp(
                 Status = STATUS_UNSUCCESSFUL;
 
             if (NT_SUCCESS(Status))
-                DeviceExtension->PnpState = Started;
+            {
+                Status = IoSetDeviceInterfaceState(&DeviceExtension->SymbolicLinkName,
+                                                   TRUE);
+                if (NT_SUCCESS(Status))
+                    DeviceExtension->PnpState = Started;
+            }
 
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
@@ -158,12 +176,19 @@ Pl2303DispatchPnp(
             break;
         case IRP_MN_SURPRISE_REMOVAL:
             DeviceExtension->PnpState = SurpriseRemovePending;
+            (VOID)IoSetDeviceInterfaceState(&DeviceExtension->SymbolicLinkName,
+                                            FALSE);
             break;
         case IRP_MN_REMOVE_DEVICE:
+            DeviceExtension->PreviousPnpState = DeviceExtension->PnpState;
             DeviceExtension->PnpState = Deleted;
+            if (DeviceExtension->PreviousPnpState != SurpriseRemovePending)
+                (VOID)IoSetDeviceInterfaceState(&DeviceExtension->SymbolicLinkName,
+                                                FALSE);
             Irp->IoStatus.Status = STATUS_SUCCESS;
             Status = IoCallDriver(DeviceExtension->NextDevice, Irp);
             IoDetachDevice(DeviceExtension->NextDevice);
+            RtlFreeUnicodeString(&DeviceExtension->SymbolicLinkName);
             IoDeleteDevice(DeviceObject);
             return Status;
         default:
