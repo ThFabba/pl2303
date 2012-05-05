@@ -70,13 +70,12 @@ Pl2303AddDevice(
 
     PAGED_CODE();
 
-    /* TODO: IoCreateDeviceSecure? */
     Status = IoCreateDevice(DriverObject,
                             sizeof(DEVICE_EXTENSION),
                             NULL,
                             FILE_DEVICE_SERIAL_PORT,
-                            FILE_DEVICE_SECURE_OPEN, /* TODO: ? */
-                            FALSE,
+                            FILE_DEVICE_SECURE_OPEN,
+                            TRUE,
                             &DeviceObject);
 
     if (!NT_SUCCESS(Status))
@@ -101,7 +100,7 @@ Pl2303AddDevice(
     Status = IoRegisterDeviceInterface(PhysicalDeviceObject,
                                        &GUID_DEVINTERFACE_COMPORT,
                                        NULL,
-                                       &DeviceExtension->SymbolicLinkName);
+                                       &DeviceExtension->InterfaceLinkName);
 
     if (!NT_SUCCESS(Status))
     {
@@ -151,7 +150,7 @@ Pl2303DispatchPnp(
 
             if (NT_SUCCESS(Status))
             {
-                Status = IoSetDeviceInterfaceState(&DeviceExtension->SymbolicLinkName,
+                Status = IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
                                                    TRUE);
                 if (NT_SUCCESS(Status))
                     DeviceExtension->PnpState = Started;
@@ -176,19 +175,19 @@ Pl2303DispatchPnp(
             break;
         case IRP_MN_SURPRISE_REMOVAL:
             DeviceExtension->PnpState = SurpriseRemovePending;
-            (VOID)IoSetDeviceInterfaceState(&DeviceExtension->SymbolicLinkName,
+            (VOID)IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
                                             FALSE);
             break;
         case IRP_MN_REMOVE_DEVICE:
             DeviceExtension->PreviousPnpState = DeviceExtension->PnpState;
             DeviceExtension->PnpState = Deleted;
             if (DeviceExtension->PreviousPnpState != SurpriseRemovePending)
-                (VOID)IoSetDeviceInterfaceState(&DeviceExtension->SymbolicLinkName,
+                (VOID)IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
                                                 FALSE);
             Irp->IoStatus.Status = STATUS_SUCCESS;
             Status = IoCallDriver(DeviceExtension->NextDevice, Irp);
             IoDetachDevice(DeviceExtension->NextDevice);
-            RtlFreeUnicodeString(&DeviceExtension->SymbolicLinkName);
+            RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
             IoDeleteDevice(DeviceObject);
             return Status;
         default:
