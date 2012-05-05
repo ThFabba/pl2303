@@ -22,3 +22,8 @@ typedef struct _DEVICE_EXTENSION
     DEVICE_PNP_STATE PreviousPnpState;
     UNICODE_STRING InterfaceLinkName;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
+
+/* pnp.c */
+DRIVER_ADD_DEVICE Pl2303AddDevice;
+__drv_dispatchType(IRP_MJ_PNP)
+DRIVER_DISPATCH Pl2303DispatchPnp;

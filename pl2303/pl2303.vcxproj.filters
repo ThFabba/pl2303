@@ -27,6 +27,9 @@
     <ClCompile Include="pl2303.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="pnp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pl2303.h">

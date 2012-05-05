@@ -373,6 +373,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pl2303.c" />
+    <ClCompile Include="pnp.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pl2303.h" />
