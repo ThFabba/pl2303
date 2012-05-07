@@ -1,9 +1,62 @@
 #include "pl2303.h"
 
+static NTSTATUS Pl2303InitializeDevice(_In_ PDEVICE_OBJECT DeviceObject,
+                                       _In_ PDEVICE_OBJECT PhysicalDeviceObject);
+static NTSTATUS Pl2303StartDevice(_In_ PDEVICE_OBJECT DeviceObject);
+static NTSTATUS Pl2303StopDevice(_In_ PDEVICE_OBJECT DeviceObject);
+
 #ifdef ALLOC_PRAGMA
+#pragma alloc_text(PAGE, Pl2303InitializeDevice)
+#pragma alloc_text(PAGE, Pl2303StartDevice)
+#pragma alloc_text(PAGE, Pl2303StopDevice)
 #pragma alloc_text(PAGE, Pl2303AddDevice)
 #pragma alloc_text(PAGE, Pl2303DispatchPnp)
 #endif /* defined ALLOC_PRAGMA */
+
+static
+NTSTATUS
+Pl2303InitializeDevice(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PDEVICE_OBJECT PhysicalDeviceObject)
+{
+    NTSTATUS Status;
+    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+
+    PAGED_CODE();
+
+    Status = IoRegisterDeviceInterface(PhysicalDeviceObject,
+                                       &GUID_DEVINTERFACE_COMPORT,
+                                       NULL,
+                                       &DeviceExtension->InterfaceLinkName);
+
+    return Status;
+}
+
+static
+NTSTATUS
+Pl2303StartDevice(
+    _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+
+    PAGED_CODE();
+
+    return IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
+                                     TRUE);
+}
+
+static
+NTSTATUS
+Pl2303StopDevice(
+    _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+
+    PAGED_CODE();
+
+    return IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
+                                     FALSE);
+}
 
 NTSTATUS
 NTAPI
@@ -44,11 +97,7 @@ Pl2303AddDevice(
         return STATUS_NO_SUCH_DEVICE;
     }
 
-    Status = IoRegisterDeviceInterface(PhysicalDeviceObject,
-                                       &GUID_DEVINTERFACE_COMPORT,
-                                       NULL,
-                                       &DeviceExtension->InterfaceLinkName);
-
+    Status = Pl2303InitializeDevice(DeviceObject, PhysicalDeviceObject);
     if (!NT_SUCCESS(Status))
     {
         IoDetachDevice(DeviceExtension->NextDevice);
@@ -96,8 +145,7 @@ Pl2303DispatchPnp(
 
             if (NT_SUCCESS(Status))
             {
-                Status = IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
-                                                   TRUE);
+                Status = Pl2303StartDevice(DeviceObject);
                 if (NT_SUCCESS(Status))
                     DeviceExtension->PnpState = Started;
             }
@@ -121,15 +169,13 @@ Pl2303DispatchPnp(
             break;
         case IRP_MN_SURPRISE_REMOVAL:
             DeviceExtension->PnpState = SurpriseRemovePending;
-            (VOID)IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
-                                            FALSE);
+            (VOID)Pl2303StopDevice(DeviceObject);
             break;
         case IRP_MN_REMOVE_DEVICE:
             DeviceExtension->PreviousPnpState = DeviceExtension->PnpState;
             DeviceExtension->PnpState = Deleted;
             if (DeviceExtension->PreviousPnpState != SurpriseRemovePending)
-                (VOID)IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
-                                                FALSE);
+                (VOID)Pl2303StopDevice(DeviceObject);
             Irp->IoStatus.Status = STATUS_SUCCESS;
             Status = IoCallDriver(DeviceExtension->NextDevice, Irp);
             IoDetachDevice(DeviceExtension->NextDevice);
