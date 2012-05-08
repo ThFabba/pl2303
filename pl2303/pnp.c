@@ -23,6 +23,7 @@ Pl2303InitializeDevice(
 {
     NTSTATUS Status;
     PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    PCONFIGURATION_INFORMATION ConfigInfo;
 
     PAGED_CODE();
 
@@ -30,6 +31,12 @@ Pl2303InitializeDevice(
                                        &GUID_DEVINTERFACE_COMPORT,
                                        NULL,
                                        &DeviceExtension->InterfaceLinkName);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ConfigInfo = IoGetConfigurationInformation();
+    ConfigInfo->SerialCount++;
 
     return Status;
 }
