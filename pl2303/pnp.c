@@ -23,6 +23,19 @@ Pl2303InitializeDevice(
 {
     NTSTATUS Status;
     PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    HANDLE KeyHandle;
+    ULONG SkipExternalNaming;
+    UNICODE_STRING PortName;
+    RTL_QUERY_REGISTRY_TABLE QueryTable[] =
+    {
+        { NULL, RTL_QUERY_REGISTRY_NOEXPAND | RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK,
+          L"SkipExternalNaming", NULL, REG_DWORD << 24 | REG_DWORD, 0, sizeof(ULONG) },
+        { NULL, RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_NOEXPAND | RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK,
+          L"PortName", NULL, REG_SZ << 24 | REG_NONE, NULL, 0 },
+    };
+    const UNICODE_STRING DosDevices = RTL_CONSTANT_STRING(L"\\DosDevices\\");
+    USHORT ComPortNameLength;
+    PWCHAR ComPortNameBuffer;
     PCONFIGURATION_INFORMATION ConfigInfo;
 
     PAGED_CODE();
@@ -31,9 +44,58 @@ Pl2303InitializeDevice(
                                        &GUID_DEVINTERFACE_COMPORT,
                                        NULL,
                                        &DeviceExtension->InterfaceLinkName);
-
     if (!NT_SUCCESS(Status))
         return Status;
+
+    Status = IoOpenDeviceRegistryKey(DeviceObject,
+                                     PLUGPLAY_REGKEY_DEVICE,
+                                     KEY_QUERY_VALUE,
+                                     &KeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
+        return Status;
+    }
+
+    RtlInitEmptyUnicodeString(&PortName, NULL, 0);
+    QueryTable[0].EntryContext = &SkipExternalNaming;
+    QueryTable[1].EntryContext = &PortName;
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE, KeyHandle, QueryTable, NULL, NULL);
+    (VOID)ZwClose(KeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
+        return Status;
+    }
+
+    /* TODO: handle non-presence of PortName gracefully */
+    if (!SkipExternalNaming)
+    {
+        ComPortNameLength = DosDevices.Length + PortName.Length;
+        ComPortNameBuffer = ExAllocatePoolWithTag(PagedPool, ComPortNameLength, PL2303_TAG);
+        if (!ComPortNameBuffer)
+        {
+            RtlFreeUnicodeString(&PortName);
+            RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
+            return STATUS_NO_MEMORY;
+        }
+        RtlInitEmptyUnicodeString(&DeviceExtension->ComPortName, ComPortNameBuffer, ComPortNameLength);
+        RtlCopyUnicodeString(&DeviceExtension->ComPortName, &DosDevices);
+        RtlAppendUnicodeStringToString(&DeviceExtension->ComPortName, &PortName);
+
+        Status = IoCreateSymbolicLink(&DeviceExtension->ComPortName,
+                                      &DeviceExtension->DeviceName);
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePoolWithTag(ComPortNameBuffer, PL2303_TAG);
+            RtlFreeUnicodeString(&PortName);
+            RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
+            return STATUS_NO_MEMORY;
+        }
+    }
+    else
+        ASSERT(DeviceExtension->ComPortName.Buffer == NULL);
+    RtlFreeUnicodeString(&PortName);
 
     ConfigInfo = IoGetConfigurationInformation();
     ConfigInfo->SerialCount++;
@@ -100,7 +162,6 @@ Pl2303AddDevice(
                             FILE_DEVICE_SECURE_OPEN,
                             TRUE,
                             &DeviceObject);
-
     if (!NT_SUCCESS(Status))
         return Status;
 

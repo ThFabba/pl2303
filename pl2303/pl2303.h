@@ -4,6 +4,8 @@
 #include <ntstrsafe.h>
 #include <ntddser.h>
 
+#define PL2303_TAG '32LP'
+
 typedef enum _DEVICE_PNP_STATE
 {
     NotStarted,
@@ -20,7 +22,9 @@ typedef struct _DEVICE_EXTENSION
     PDEVICE_OBJECT LowerDevice;
     DEVICE_PNP_STATE PnpState;
     DEVICE_PNP_STATE PreviousPnpState;
+    UNICODE_STRING DeviceName;
     UNICODE_STRING InterfaceLinkName;
+    UNICODE_STRING ComPortName;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 /* pnp.c */
