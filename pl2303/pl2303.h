@@ -17,7 +17,7 @@ typedef enum _DEVICE_PNP_STATE
 
 typedef struct _DEVICE_EXTENSION
 {
-    PDEVICE_OBJECT NextDevice;
+    PDEVICE_OBJECT LowerDevice;
     DEVICE_PNP_STATE PnpState;
     DEVICE_PNP_STATE PreviousPnpState;
     UNICODE_STRING InterfaceLinkName;

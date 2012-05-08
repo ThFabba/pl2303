@@ -105,21 +105,21 @@ Pl2303AddDevice(
 
     DeviceObject->Flags |= DO_BUFFERED_IO;
 
-    ASSERT(DeviceExtension->NextDevice == NULL);
+    ASSERT(DeviceExtension->LowerDevice == NULL);
     Status = IoAttachDeviceToDeviceStackSafe(DeviceObject,
                                              PhysicalDeviceObject,
-                                             &DeviceExtension->NextDevice);
+                                             &DeviceExtension->LowerDevice);
     if (!NT_SUCCESS(Status))
     {
         IoDeleteDevice(DeviceObject);
         return STATUS_NO_SUCH_DEVICE;
     }
-    ASSERT(DeviceExtension->NextDevice);
+    ASSERT(DeviceExtension->LowerDevice);
 
     Status = Pl2303InitializeDevice(DeviceObject, PhysicalDeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        IoDetachDevice(DeviceExtension->NextDevice);
+        IoDetachDevice(DeviceExtension->LowerDevice);
         IoDeleteDevice(DeviceObject);
         return Status;
     }
@@ -157,7 +157,7 @@ Pl2303DispatchPnp(
     switch (IoStack->MinorFunction)
     {
         case IRP_MN_START_DEVICE:
-            if (IoForwardIrpSynchronously(DeviceExtension->NextDevice, Irp))
+            if (IoForwardIrpSynchronously(DeviceExtension->LowerDevice, Irp))
                 Status = Irp->IoStatus.Status;
             else
                 Status = STATUS_UNSUCCESSFUL;
@@ -196,18 +196,18 @@ Pl2303DispatchPnp(
             if (DeviceExtension->PreviousPnpState != SurpriseRemovePending)
                 (VOID)Pl2303StopDevice(DeviceObject);
             Irp->IoStatus.Status = STATUS_SUCCESS;
-            Status = IoCallDriver(DeviceExtension->NextDevice, Irp);
-            IoDetachDevice(DeviceExtension->NextDevice);
+            Status = IoCallDriver(DeviceExtension->LowerDevice, Irp);
+            IoDetachDevice(DeviceExtension->LowerDevice);
             (VOID)Pl2303DestroyDevice(DeviceObject);
             IoDeleteDevice(DeviceObject);
             return Status;
         default:
             /* Unsupported request - leave Irp->IoStack.Status untouched */
             IoSkipCurrentIrpStackLocation(Irp);
-            return IoCallDriver(DeviceExtension->NextDevice, Irp);
+            return IoCallDriver(DeviceExtension->LowerDevice, Irp);
     }
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoSkipCurrentIrpStackLocation(Irp);
-    return IoCallDriver(DeviceExtension->NextDevice, Irp);
+    return IoCallDriver(DeviceExtension->LowerDevice, Irp);
 }
