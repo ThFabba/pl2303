@@ -2,11 +2,13 @@
 
 static NTSTATUS Pl2303InitializeDevice(_In_ PDEVICE_OBJECT DeviceObject,
                                        _In_ PDEVICE_OBJECT PhysicalDeviceObject);
+static NTSTATUS Pl2303DestroyDevice(_In_ PDEVICE_OBJECT DeviceObject);
 static NTSTATUS Pl2303StartDevice(_In_ PDEVICE_OBJECT DeviceObject);
 static NTSTATUS Pl2303StopDevice(_In_ PDEVICE_OBJECT DeviceObject);
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, Pl2303InitializeDevice)
+#pragma alloc_text(PAGE, Pl2303DestroyDevice)
 #pragma alloc_text(PAGE, Pl2303StartDevice)
 #pragma alloc_text(PAGE, Pl2303StopDevice)
 #pragma alloc_text(PAGE, Pl2303AddDevice)
@@ -30,6 +32,20 @@ Pl2303InitializeDevice(
                                        &DeviceExtension->InterfaceLinkName);
 
     return Status;
+}
+
+static
+NTSTATUS
+Pl2303DestroyDevice(
+    _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+
+    PAGED_CODE();
+
+    RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
+
+    return STATUS_SUCCESS;
 }
 
 static
@@ -182,7 +198,7 @@ Pl2303DispatchPnp(
             Irp->IoStatus.Status = STATUS_SUCCESS;
             Status = IoCallDriver(DeviceExtension->NextDevice, Irp);
             IoDetachDevice(DeviceExtension->NextDevice);
-            RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
+            (VOID)Pl2303DestroyDevice(DeviceObject);
             IoDeleteDevice(DeviceObject);
             return Status;
         default:
