@@ -40,12 +40,19 @@ Pl2303InitializeDevice(
 
     PAGED_CODE();
 
+    Pl2303Debug(         "%s. DeviceObject=%p, PhysicalDeviceObject=%p\n",
+                __FUNCTION__, DeviceObject,    PhysicalDeviceObject);
+
     Status = IoRegisterDeviceInterface(PhysicalDeviceObject,
                                        &GUID_DEVINTERFACE_COMPORT,
                                        NULL,
                                        &DeviceExtension->InterfaceLinkName);
     if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. IoRegisterDeviceInterface failed with %08lx\n",
+                    __FUNCTION__, Status);
         return Status;
+    }
 
     Status = IoOpenDeviceRegistryKey(DeviceObject,
                                      PLUGPLAY_REGKEY_DEVICE,
@@ -53,6 +60,8 @@ Pl2303InitializeDevice(
                                      &KeyHandle);
     if (!NT_SUCCESS(Status))
     {
+        Pl2303Error(         "%s. IoOpenDeviceRegistryKey failed with %08lx\n",
+                    __FUNCTION__, Status);
         RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
         return Status;
     }
@@ -64,6 +73,8 @@ Pl2303InitializeDevice(
     (VOID)ZwClose(KeyHandle);
     if (!NT_SUCCESS(Status))
     {
+        Pl2303Error(          "%s. RtlQueryRegistryValues failed with %08lx\n",
+                    __FUNCTION__, Status);
         RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
         return Status;
     }
@@ -75,6 +86,8 @@ Pl2303InitializeDevice(
         ComPortNameBuffer = ExAllocatePoolWithTag(PagedPool, ComPortNameLength, PL2303_TAG);
         if (!ComPortNameBuffer)
         {
+            Pl2303Error(         "%s. Allocating COM port name failed\n",
+                        __FUNCTION__);
             RtlFreeUnicodeString(&PortName);
             RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
             return STATUS_NO_MEMORY;
@@ -102,6 +115,9 @@ Pl2303DestroyDevice(
 
     PAGED_CODE();
 
+    Pl2303Debug(         "%s. DeviceObject=%p\n",
+                __FUNCTION__, DeviceObject);
+
     if (DeviceExtension->ComPortName.Buffer)
         ExFreePoolWithTag(DeviceExtension->ComPortName.Buffer, PL2303_TAG);
 
@@ -122,10 +138,17 @@ Pl2303StartDevice(
 
     PAGED_CODE();
 
+    Pl2303Debug(         "%s. DeviceObject=%p\n",
+                __FUNCTION__, DeviceObject);
+
     Status = IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
                                        TRUE);
     if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. IoSetDeviceInterfaceState failed with %08lx\n",
+                    __FUNCTION__, Status);
         return Status;
+    }
 
     if (DeviceExtension->ComPortName.Buffer)
     {
@@ -133,6 +156,8 @@ Pl2303StartDevice(
                                       &DeviceExtension->DeviceName);
         if (!NT_SUCCESS(Status))
         {
+            Pl2303Error(         "%s. IoCreateSymbolicLink failed with %08lx\n",
+                        __FUNCTION__, Status);
             (VOID)IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
                                             FALSE);
             return Status;
@@ -151,6 +176,9 @@ Pl2303StopDevice(
     PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
 
     PAGED_CODE();
+
+    Pl2303Debug(         "%s. DeviceObject=%p\n",
+                __FUNCTION__, DeviceObject);
 
     if (DeviceExtension->ComPortName.Buffer)
         Status = IoDeleteSymbolicLink(&DeviceExtension->ComPortName);
@@ -175,19 +203,28 @@ Pl2303AddDevice(
 
     PAGED_CODE();
 
+    Pl2303Debug(         "%s. DriverObject=%p, PhysicalDeviceObject=%p\n",
+                __FUNCTION__, DriverObject,    PhysicalDeviceObject);
+
     DeviceName.MaximumLength = sizeof(L"\\Device\\Pl2303Serial999");
     DeviceName.Length = 0;
     DeviceName.Buffer = ExAllocatePoolWithTag(PagedPool,
                                               DeviceName.MaximumLength,
                                               PL2303_TAG);
     if (!DeviceName.Buffer)
+    {
+        Pl2303Error(         "%s. Allocating device name buffer failed\n",
+                    __FUNCTION__);
         return STATUS_NO_MEMORY;
+    }
 
     Status = RtlUnicodeStringPrintf(&DeviceName,
                                     L"\\Device\\Pl2303Serial%d",
                                     DeviceNumber++);
     if (!NT_SUCCESS(Status))
     {
+        Pl2303Error(         "%s. RtlUnicodeStringPrintf failed with %08lx\n",
+                    __FUNCTION__, Status);
         ExFreePoolWithTag(DeviceName.Buffer, PL2303_TAG);
         return Status;
     }
@@ -200,7 +237,11 @@ Pl2303AddDevice(
                             TRUE,
                             &DeviceObject);
     if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. IoCreateDevice failed with %08lx\n",
+                    __FUNCTION__, Status);
         return Status;
+    }
 
     DeviceExtension = DeviceObject->DeviceExtension;
     RtlZeroMemory(DeviceExtension, sizeof(*DeviceExtension));
@@ -217,6 +258,8 @@ Pl2303AddDevice(
                                              &DeviceExtension->LowerDevice);
     if (!NT_SUCCESS(Status))
     {
+        Pl2303Error(         "%s. IoAttachDeviceToDeviceStackSafe failed with %08lx\n",
+                    __FUNCTION__, Status);
         IoDeleteDevice(DeviceObject);
         return STATUS_NO_SUCH_DEVICE;
     }
@@ -225,6 +268,8 @@ Pl2303AddDevice(
     Status = Pl2303InitializeDevice(DeviceObject, PhysicalDeviceObject);
     if (!NT_SUCCESS(Status))
     {
+        Pl2303Error(         "%s. Pl2303InitializeDevice failed with %08lx\n",
+                    __FUNCTION__, Status);
         IoDetachDevice(DeviceExtension->LowerDevice);
         IoDeleteDevice(DeviceObject);
         return Status;
@@ -247,6 +292,9 @@ Pl2303DispatchPnp(
 
     PAGED_CODE();
 
+    Pl2303Debug(         "%s. DeviceObject=%p, Irp=%p\n",
+                __FUNCTION__, DeviceObject,    Irp);
+
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     ASSERT(IoStack->MajorFunction == IRP_MJ_PNP);
 
@@ -254,6 +302,8 @@ Pl2303DispatchPnp(
 
     if (DeviceExtension->PnpState == Deleted)
     {
+        Pl2303Warn(         "%s. Device already deleted\n",
+                   __FUNCTION__);
         Status = STATUS_NO_SUCH_DEVICE;
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -266,15 +316,30 @@ Pl2303DispatchPnp(
             if (IoForwardIrpSynchronously(DeviceExtension->LowerDevice, Irp))
                 Status = Irp->IoStatus.Status;
             else
+            {
+                Pl2303Error(         "%s. IoForwardIrpSynchronously failed\n",
+                            __FUNCTION__);
                 Status = STATUS_UNSUCCESSFUL;
+            }
 
             if (NT_SUCCESS(Status))
             {
-                Status = Pl2303StartDevice(DeviceObject);
-                if (NT_SUCCESS(Status))
-                    DeviceExtension->PnpState = Started;
+                Pl2303Warn(         "%s. IRP_MN_START_DEVICE failed with %08lx\n",
+                           __FUNCTION__, Status);
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return Status;
             }
 
+            Status = Pl2303StartDevice(DeviceObject);
+            if (!NT_SUCCESS(Status))
+            {
+                Pl2303Error(         "%s. Pl2303StartDevice failed with %08lx\n",
+                            __FUNCTION__, Status);
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return Status;
+            }
+
+            DeviceExtension->PnpState = Started;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
         case IRP_MN_QUERY_STOP_DEVICE:
@@ -294,13 +359,21 @@ Pl2303DispatchPnp(
             break;
         case IRP_MN_SURPRISE_REMOVAL:
             DeviceExtension->PnpState = SurpriseRemovePending;
-            (VOID)Pl2303StopDevice(DeviceObject);
+            Status = Pl2303StopDevice(DeviceObject);
+            if (!NT_SUCCESS(Status))
+                Pl2303Warn(         "%s. Pl2303StopDevice failed with %08lx\n",
+                           __FUNCTION__, Status);
             break;
         case IRP_MN_REMOVE_DEVICE:
             DeviceExtension->PreviousPnpState = DeviceExtension->PnpState;
             DeviceExtension->PnpState = Deleted;
             if (DeviceExtension->PreviousPnpState != SurpriseRemovePending)
-                (VOID)Pl2303StopDevice(DeviceObject);
+            {
+                Status = Pl2303StopDevice(DeviceObject);
+                if (!NT_SUCCESS(Status))
+                    Pl2303Warn(         "%s. Pl2303StopDevice failed with %08lx\n",
+                               __FUNCTION__, Status);
+            }
             Irp->IoStatus.Status = STATUS_SUCCESS;
             Status = IoCallDriver(DeviceExtension->LowerDevice, Irp);
             IoDetachDevice(DeviceExtension->LowerDevice);

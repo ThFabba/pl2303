@@ -25,10 +25,10 @@ DriverEntry(
     _In_ PDRIVER_OBJECT DriverObject,
     _In_ PUNICODE_STRING RegistryPath)
 {
-    UNREFERENCED_PARAMETER(DriverObject);
-    UNREFERENCED_PARAMETER(RegistryPath);
-
     PAGED_CODE();
+
+    Pl2303Debug(         "%s. DriverObject=%p, RegistryPath='%wZ'\n",
+                __FUNCTION__, DriverObject,    RegistryPath);
 
     DriverObject->DriverUnload = Pl2303Unload;
     DriverObject->DriverExtension->AddDevice = Pl2303AddDevice;
@@ -47,9 +47,10 @@ NTAPI
 Pl2303Unload(
     _In_ PDRIVER_OBJECT DriverObject)
 {
-    UNREFERENCED_PARAMETER(DriverObject);
-
     PAGED_CODE();
+
+    Pl2303Debug(         "%s. DriverObject=%p\n",
+                __FUNCTION__, DriverObject);
 }
 
 static
@@ -65,6 +66,9 @@ Pl2303DispatchPower(
 
     PAGED_CODE();
 
+    Pl2303Debug(          "%s. DeviceObject=%p, Irp=%p\n",
+                 __FUNCTION__, DeviceObject,    Irp);
+
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     ASSERT(IoStack->MajorFunction == IRP_MJ_POWER);
 
@@ -72,6 +76,8 @@ Pl2303DispatchPower(
 
     if (DeviceExtension->PnpState == Deleted)
     {
+        Pl2303Warn(         "%s. Device already deleted\n",
+                   __FUNCTION__);
         PoStartNextPowerIrp(Irp);
         Status = STATUS_NO_SUCH_DEVICE;
         Irp->IoStatus.Status = Status;
@@ -98,6 +104,9 @@ Pl2303DispatchCreateClose(
 
     PAGED_CODE();
 
+    Pl2303Debug(          "%s. DeviceObject=%p, Irp=%p\n",
+                 __FUNCTION__, DeviceObject,    Irp);
+
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     ASSERT(IoStack->MajorFunction == IRP_MJ_CREATE ||
            IoStack->MajorFunction == IRP_MJ_CLOSE);
@@ -118,9 +127,10 @@ Pl2303DispatchRead(
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStack;
 
-    UNREFERENCED_PARAMETER(DeviceObject);
-
     PAGED_CODE();
+
+    Pl2303Debug(         "%s. DeviceObject=%p, Irp=%p\n",
+                __FUNCTION__, DeviceObject,    Irp);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     ASSERT(IoStack->MajorFunction == IRP_MJ_READ);

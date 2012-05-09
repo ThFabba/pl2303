@@ -6,6 +6,8 @@
 
 #define PL2303_TAG '32LP'
 
+#define inline __inline
+
 typedef enum _DEVICE_PNP_STATE
 {
     NotStarted,
@@ -26,6 +28,58 @@ typedef struct _DEVICE_EXTENSION
     UNICODE_STRING InterfaceLinkName;
     UNICODE_STRING ComPortName;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
+
+/* Debugging functions */
+static
+inline
+VOID
+Pl2303Debug(
+    _In_ PCSTR Format,
+    ...)
+{
+    va_list Arguments;
+    va_start(Arguments, Format);
+    (VOID)vDbgPrintExWithPrefix("Pl2303: ",
+                                DPFLTR_IHVDRIVER_ID,
+                                DPFLTR_TRACE_LEVEL,
+                                Format,
+                                Arguments);
+    va_end(Arguments);
+}
+
+static
+inline
+VOID
+Pl2303Warn(
+    _In_ PCSTR Format,
+    ...)
+{
+    va_list Arguments;
+    va_start(Arguments, Format);
+    (VOID)vDbgPrintExWithPrefix("Pl2303: ",
+                                DPFLTR_IHVDRIVER_ID,
+                                DPFLTR_WARNING_LEVEL,
+                                Format,
+                                Arguments);
+    va_end(Arguments);
+}
+
+static
+inline
+VOID
+Pl2303Error(
+    _In_ PCSTR Format,
+    ...)
+{
+    va_list Arguments;
+    va_start(Arguments, Format);
+    (VOID)vDbgPrintExWithPrefix("Pl2303: ",
+                                DPFLTR_IHVDRIVER_ID,
+                                DPFLTR_ERROR_LEVEL,
+                                Format,
+                                Arguments);
+    va_end(Arguments);
+}
 
 /* pnp.c */
 DRIVER_ADD_DEVICE Pl2303AddDevice;
