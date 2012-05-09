@@ -82,16 +82,6 @@ Pl2303InitializeDevice(
         RtlInitEmptyUnicodeString(&DeviceExtension->ComPortName, ComPortNameBuffer, ComPortNameLength);
         RtlCopyUnicodeString(&DeviceExtension->ComPortName, &DosDevices);
         RtlAppendUnicodeStringToString(&DeviceExtension->ComPortName, &PortName);
-
-        Status = IoCreateSymbolicLink(&DeviceExtension->ComPortName,
-                                      &DeviceExtension->DeviceName);
-        if (!NT_SUCCESS(Status))
-        {
-            ExFreePoolWithTag(ComPortNameBuffer, PL2303_TAG);
-            RtlFreeUnicodeString(&PortName);
-            RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
-            return STATUS_NO_MEMORY;
-        }
     }
     else
         ASSERT(DeviceExtension->ComPortName.Buffer == NULL);
@@ -112,7 +102,12 @@ Pl2303DestroyDevice(
 
     PAGED_CODE();
 
+    if (DeviceExtension->ComPortName.Buffer)
+        ExFreePoolWithTag(DeviceExtension->ComPortName.Buffer, PL2303_TAG);
+
     RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
+
+    ExFreePoolWithTag(DeviceExtension->DeviceName.Buffer, PL2303_TAG);
 
     return STATUS_SUCCESS;
 }
@@ -122,12 +117,29 @@ NTSTATUS
 Pl2303StartDevice(
     _In_ PDEVICE_OBJECT DeviceObject)
 {
+    NTSTATUS Status;
     PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
 
     PAGED_CODE();
 
-    return IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
-                                     TRUE);
+    Status = IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
+                                       TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    if (DeviceExtension->ComPortName.Buffer)
+    {
+        Status = IoCreateSymbolicLink(&DeviceExtension->ComPortName,
+                                      &DeviceExtension->DeviceName);
+        if (!NT_SUCCESS(Status))
+        {
+            (VOID)IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
+                                            FALSE);
+            return Status;
+        }
+    }
+
+    return Status;
 }
 
 static
@@ -135,12 +147,18 @@ NTSTATUS
 Pl2303StopDevice(
     _In_ PDEVICE_OBJECT DeviceObject)
 {
+    NTSTATUS Status;
     PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
 
     PAGED_CODE();
 
-    return IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
-                                     FALSE);
+    if (DeviceExtension->ComPortName.Buffer)
+        Status = IoDeleteSymbolicLink(&DeviceExtension->ComPortName);
+
+    Status =  IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
+                                        FALSE);
+
+    return Status;
 }
 
 NTSTATUS
@@ -152,12 +170,31 @@ Pl2303AddDevice(
     NTSTATUS Status;
     PDEVICE_OBJECT DeviceObject;
     PDEVICE_EXTENSION DeviceExtension;
+    UNICODE_STRING DeviceName;
+    static INT DeviceNumber = 0;
 
     PAGED_CODE();
 
+    DeviceName.MaximumLength = sizeof(L"\\Device\\Pl2303Serial999");
+    DeviceName.Length = 0;
+    DeviceName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                              DeviceName.MaximumLength,
+                                              PL2303_TAG);
+    if (!DeviceName.Buffer)
+        return STATUS_NO_MEMORY;
+
+    Status = RtlUnicodeStringPrintf(&DeviceName,
+                                    L"\\Device\\Pl2303Serial%d",
+                                    DeviceNumber++);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(DeviceName.Buffer, PL2303_TAG);
+        return Status;
+    }
+
     Status = IoCreateDevice(DriverObject,
                             sizeof(DEVICE_EXTENSION),
-                            NULL,
+                            &DeviceName,
                             FILE_DEVICE_SERIAL_PORT,
                             FILE_DEVICE_SECURE_OPEN,
                             TRUE,
@@ -167,6 +204,7 @@ Pl2303AddDevice(
 
     DeviceExtension = DeviceObject->DeviceExtension;
     RtlZeroMemory(DeviceExtension, sizeof(*DeviceExtension));
+    DeviceExtension->DeviceName = DeviceName;
 
     /* TODO: verify we can do this */
     DeviceObject->Flags |= DO_POWER_PAGABLE;
