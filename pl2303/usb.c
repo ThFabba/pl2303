@@ -163,9 +163,35 @@ Pl2303UsbStart(
 
     Descriptor = DeviceDescriptor;
 
-    Pl2303Debug(         "%s. Device descriptor: idVendor=%x, idProduct=%x\n",
-                __FUNCTION__,        Descriptor->idVendor,
-                                                  Descriptor->idProduct);
+    Pl2303Debug(         "%s. Device descriptor: "
+                                         "bLength=%u, "
+                                         "bDescriptorType=%u, "
+                                         "bcdUSB=0x%x, "
+                                         "bDeviceClass=0x%x, "
+                                         "bDeviceSubClass=0x%x, "
+                                         "bDeviceProtocol=0x%x, "
+                                         "bMaxPacketSize0=%u, "
+                                         "idVendor=0x%x, "
+                                         "idProduct=0x%x, "
+                                         "bcdDevice=0x%x, "
+                                         "iManufacturer=%u, "
+                                         "iProduct=%u, "
+                                         "iSerialNumber=%u, "
+                                         "bNumConfigurations=%u\n",
+                __FUNCTION__, Descriptor->bLength,
+                              Descriptor->bDescriptorType,
+                              Descriptor->bcdUSB,
+                              Descriptor->bDeviceClass,
+                              Descriptor->bDeviceSubClass,
+                              Descriptor->bDeviceProtocol,
+                              Descriptor->bMaxPacketSize0,
+                              Descriptor->idVendor,
+                              Descriptor->idProduct,
+                              Descriptor->bcdDevice,
+                              Descriptor->iManufacturer,
+                              Descriptor->iProduct,
+                              Descriptor->iSerialNumber,
+                              Descriptor->bNumConfigurations);
 
     ExFreePoolWithTag(DeviceDescriptor, PL2303_TAG);
 
