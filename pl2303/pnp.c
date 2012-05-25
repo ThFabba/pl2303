@@ -178,11 +178,15 @@ Pl2303DestroyDevice(
     _In_ PDEVICE_OBJECT DeviceObject)
 {
     PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    PCONFIGURATION_INFORMATION ConfigInfo;
 
     PAGED_CODE();
 
     Pl2303Debug(         "%s. DeviceObject=%p\n",
                 __FUNCTION__, DeviceObject);
+
+    ConfigInfo = IoGetConfigurationInformation();
+    ConfigInfo->SerialCount--;
 
     if (DeviceExtension->ComPortName.Buffer)
         ExFreePoolWithTag(DeviceExtension->ComPortName.Buffer, PL2303_TAG);
