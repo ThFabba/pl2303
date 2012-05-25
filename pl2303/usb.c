@@ -137,13 +137,37 @@ Pl2303UsbStart(
     _In_ PDEVICE_OBJECT DeviceObject)
 {
     NTSTATUS Status;
+    PVOID DeviceDescriptor;
+    ULONG DeviceDescriptorLength;
+    PUSB_DEVICE_DESCRIPTOR Descriptor;
 
     PAGED_CODE();
 
     Pl2303Debug(         "%s. DeviceObject=%p\n",
                 __FUNCTION__, DeviceObject);
 
-    Status = STATUS_SUCCESS;
+    DeviceDescriptorLength = sizeof(USB_DEVICE_DESCRIPTOR);
+    Status = Pl2303UsbGetDescriptor(DeviceObject,
+                                    URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE,
+                                    USB_DEVICE_DESCRIPTOR_TYPE,
+                                    &DeviceDescriptor,
+                                    &DeviceDescriptorLength);
+
+    if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbGetDescriptor failed with %08lx\n",
+                    __FUNCTION__, Status);
+        return Status;
+    }
+    ASSERT(DeviceDescriptorLength == sizeof(USB_DEVICE_DESCRIPTOR));
+
+    Descriptor = DeviceDescriptor;
+
+    Pl2303Debug(         "%s. Device descriptor: idVendor=%x, idProduct=%x\n",
+                __FUNCTION__,        Descriptor->idVendor,
+                                                  Descriptor->idProduct);
+
+    ExFreePoolWithTag(DeviceDescriptor, PL2303_TAG);
 
     return Status;
 }
