@@ -77,6 +77,9 @@ Pl2303UsbGetDescriptor(
     PURB Urb;
 
     PAGED_CODE();
+    ASSERT(Buffer);
+    ASSERT(BufferLength);
+    ASSERT(*BufferLength > 0);
 
     Pl2303Debug(         "%s. DeviceObject=%p, UrbFunction=%u, DescriptorType=%u, Buffer=%p, "
                              "BufferLength=%p\n",
@@ -101,6 +104,7 @@ Pl2303UsbGetDescriptor(
         ExFreePoolWithTag(Urb, PL2303_URB_TAG);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+    RtlFillMemory(*Buffer, *BufferLength, 0xaa);
 
     UsbBuildGetDescriptorRequest(Urb,
                                  sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
@@ -123,7 +127,7 @@ Pl2303UsbGetDescriptor(
         *Buffer = NULL;
         ExFreePoolWithTag(Urb, PL2303_URB_TAG);
         *BufferLength = 0;
-        return Status;
+        return !NT_SUCCESS(Status) ? Status : Urb->UrbHeader.Status;
     }
 
     *BufferLength = Urb->UrbControlDescriptorRequest.TransferBufferLength;
