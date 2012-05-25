@@ -8,6 +8,7 @@
 
 #define inline __inline
 
+/* Types */
 typedef enum _DEVICE_PNP_STATE
 {
     NotStarted,
@@ -85,3 +86,7 @@ Pl2303Error(
 DRIVER_ADD_DEVICE Pl2303AddDevice;
 __drv_dispatchType(IRP_MJ_PNP)
 DRIVER_DISPATCH Pl2303DispatchPnp;
+
+/* usb.c */
+NTSTATUS Pl2303UsbStart(_In_ PDEVICE_OBJECT DeviceObject);
+NTSTATUS Pl2303UsbStop(_In_ PDEVICE_OBJECT DeviceObject);

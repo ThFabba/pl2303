@@ -30,6 +30,9 @@
     <ClCompile Include="pnp.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="usb.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pl2303.h">

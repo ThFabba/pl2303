@@ -217,6 +217,14 @@ Pl2303StartDevice(
     Pl2303Debug(         "%s. DeviceObject=%p\n",
                 __FUNCTION__, DeviceObject);
 
+    Status = Pl2303UsbStart(DeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbStart failed with %08lx\n",
+                    __FUNCTION__, Status);
+        return Status;
+    }
+
     Status = IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
                                        TRUE);
     if (!NT_SUCCESS(Status))
@@ -257,10 +265,12 @@ Pl2303StopDevice(
                 __FUNCTION__, DeviceObject);
 
     if (DeviceExtension->ComPortName.Buffer)
-        Status = IoDeleteSymbolicLink(&DeviceExtension->ComPortName);
+        (VOID)IoDeleteSymbolicLink(&DeviceExtension->ComPortName);
 
-    Status =  IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
-                                        FALSE);
+    (VOID)IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
+                                    FALSE);
+
+    Status = Pl2303UsbStop(DeviceObject);
 
     return Status;
 }
