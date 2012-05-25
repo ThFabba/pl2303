@@ -71,7 +71,7 @@ Pl2303InitializeDevice(
         Pl2303Error(         "%s. Allocating registry value information failed\n",
                     __FUNCTION__);
         RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
-        return STATUS_NO_MEMORY;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
     RtlInitUnicodeString(&ValueName, L"SkipExternalNaming");
     Status = ZwQueryValueKey(KeyHandle,
@@ -115,7 +115,7 @@ Pl2303InitializeDevice(
                 Pl2303Error(         "%s. Allocating registry value information failed\n",
                             __FUNCTION__);
                 RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
-                return STATUS_NO_MEMORY;
+                return STATUS_INSUFFICIENT_RESOURCES;
             }
             Status = ZwQueryValueKey(KeyHandle,
                                      &ValueName,
@@ -146,7 +146,7 @@ Pl2303InitializeDevice(
                             __FUNCTION__);
                 ExFreePoolWithTag(ValueInformation, PL2303_TAG);
                 RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
-                return STATUS_NO_MEMORY;
+                return STATUS_INSUFFICIENT_RESOURCES;
             }
             RtlInitEmptyUnicodeString(&DeviceExtension->ComPortName,
                                       ComPortNameBuffer,
@@ -301,7 +301,7 @@ Pl2303AddDevice(
     {
         Pl2303Error(         "%s. Allocating device name buffer failed\n",
                     __FUNCTION__);
-        return STATUS_NO_MEMORY;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     Status = RtlUnicodeStringPrintf(&DeviceName,
