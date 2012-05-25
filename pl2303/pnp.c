@@ -104,7 +104,7 @@ Pl2303InitializeDevice(
                                  NULL,
                                  0,
                                  &ValueInformationLength);
-        if (NT_SUCCESS(Status))
+        if (Status == STATUS_BUFFER_TOO_SMALL)
         {
             ASSERT(ValueInformationLength != 0);
             ValueInformation = ExAllocatePoolWithTag(PagedPool,
@@ -156,6 +156,12 @@ Pl2303InitializeDevice(
                                            (PCWSTR)ValueInformation->Data);
 
             ExFreePoolWithTag(ValueInformation, PL2303_TAG);
+        }
+        else
+        {
+            Pl2303Debug(         "%s. ZwQueryValueKey failed with %08lx\n",
+                        __FUNCTION__, Status);
+            Status = STATUS_SUCCESS;
         }
     }
     ASSERT(DeviceExtension->ComPortName.Buffer == ComPortNameBuffer);
