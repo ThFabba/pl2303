@@ -26,12 +26,14 @@ Pl2303InitializeDevice(
     HANDLE KeyHandle;
     ULONG SkipExternalNaming;
     UNICODE_STRING PortName;
+    ULONG Zero = 0;
+    UNICODE_STRING EmptyString;
     RTL_QUERY_REGISTRY_TABLE QueryTable[] =
     {
         { NULL, RTL_QUERY_REGISTRY_NOEXPAND | RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK,
-          L"SkipExternalNaming", NULL, REG_DWORD << 24 | REG_DWORD, 0, sizeof(ULONG) },
-        { NULL, RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_NOEXPAND | RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK,
-          L"PortName", NULL, REG_SZ << 24 | REG_NONE, NULL, 0 },
+          L"SkipExternalNaming", NULL, REG_DWORD << 24 | REG_DWORD, NULL, sizeof(ULONG) },
+        { NULL, RTL_QUERY_REGISTRY_NOEXPAND | RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK,
+          L"PortName", NULL, REG_SZ << 24 | REG_SZ, NULL, sizeof(UNICODE_STRING) },
     };
     const UNICODE_STRING DosDevices = RTL_CONSTANT_STRING(L"\\DosDevices\\");
     USHORT ComPortNameLength;
@@ -54,7 +56,10 @@ Pl2303InitializeDevice(
         return Status;
     }
 
-    Status = IoOpenDeviceRegistryKey(DeviceObject,
+    Pl2303Debug(         "%s. Device Interface is '%wZ'\n",
+                __FUNCTION__, &DeviceExtension->InterfaceLinkName);
+
+    Status = IoOpenDeviceRegistryKey(PhysicalDeviceObject,
                                      PLUGPLAY_REGKEY_DEVICE,
                                      KEY_QUERY_VALUE,
                                      &KeyHandle);
@@ -66,8 +71,10 @@ Pl2303InitializeDevice(
         return Status;
     }
 
-    RtlInitEmptyUnicodeString(&PortName, NULL, 0);
+    QueryTable[0].DefaultData = &Zero;
     QueryTable[0].EntryContext = &SkipExternalNaming;
+    RtlInitEmptyUnicodeString(&EmptyString, NULL, 0);
+    QueryTable[1].DefaultData = &EmptyString;
     QueryTable[1].EntryContext = &PortName;
     Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE, KeyHandle, QueryTable, NULL, NULL);
     (VOID)ZwClose(KeyHandle);
@@ -79,8 +86,7 @@ Pl2303InitializeDevice(
         return Status;
     }
 
-    /* TODO: handle non-presence of PortName gracefully */
-    if (!SkipExternalNaming)
+    if (!SkipExternalNaming && PortName.Buffer)
     {
         ComPortNameLength = DosDevices.Length + PortName.Length;
         ComPortNameBuffer = ExAllocatePoolWithTag(PagedPool, ComPortNameLength, PL2303_TAG);
@@ -88,7 +94,7 @@ Pl2303InitializeDevice(
         {
             Pl2303Error(         "%s. Allocating COM port name failed\n",
                         __FUNCTION__);
-            RtlFreeUnicodeString(&PortName);
+            //RtlFreeUnicodeString(&PortName);
             RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
             return STATUS_NO_MEMORY;
         }
@@ -98,10 +104,17 @@ Pl2303InitializeDevice(
     }
     else
         ASSERT(DeviceExtension->ComPortName.Buffer == NULL);
-    RtlFreeUnicodeString(&PortName);
+    if (PortName.Buffer)
+        ;//RtlFreeUnicodeString(&PortName);
+
+    Pl2303Debug(         "%s. COM Port name is is '%wZ'\n",
+                __FUNCTION__, &DeviceExtension->ComPortName);
 
     ConfigInfo = IoGetConfigurationInformation();
     ConfigInfo->SerialCount++;
+
+    Pl2303Debug(         "%s. New serial port count: %lu\n",
+                __FUNCTION__, ConfigInfo->SerialCount);
 
     return Status;
 }
@@ -229,6 +242,8 @@ Pl2303AddDevice(
         return Status;
     }
 
+    Pl2303Debug(         "%s. Device Name is '%wZ'\n",
+                __FUNCTION__, &DeviceName);
     Status = IoCreateDevice(DriverObject,
                             sizeof(DEVICE_EXTENSION),
                             &DeviceName,
@@ -322,7 +337,7 @@ Pl2303DispatchPnp(
                 Status = STATUS_UNSUCCESSFUL;
             }
 
-            if (NT_SUCCESS(Status))
+            if (!NT_SUCCESS(Status))
             {
                 Pl2303Warn(         "%s. IRP_MN_START_DEVICE failed with %08lx\n",
                            __FUNCTION__, Status);
