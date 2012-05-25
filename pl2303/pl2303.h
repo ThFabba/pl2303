@@ -3,8 +3,12 @@
 #include <ntddk.h>
 #include <ntstrsafe.h>
 #include <ntddser.h>
+#include <usb.h>
+#include <usbdlib.h>
+#include <usbioctl.h>
 
-#define PL2303_TAG '32LP'
+#define PL2303_TAG      '32LP'
+#define PL2303_URB_TAG  'U2LP'
 
 #define inline __inline
 
