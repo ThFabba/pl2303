@@ -24,20 +24,13 @@ Pl2303InitializeDevice(
     NTSTATUS Status;
     PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     HANDLE KeyHandle;
+    UNICODE_STRING ValueName;
+    PKEY_VALUE_PARTIAL_INFORMATION ValueInformation;
+    ULONG ValueInformationLength;
     ULONG SkipExternalNaming;
-    UNICODE_STRING PortName;
-    ULONG Zero = 0;
-    UNICODE_STRING EmptyString;
-    RTL_QUERY_REGISTRY_TABLE QueryTable[] =
-    {
-        { NULL, RTL_QUERY_REGISTRY_NOEXPAND | RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK,
-          L"SkipExternalNaming", NULL, REG_DWORD << 24 | REG_DWORD, NULL, sizeof(ULONG) },
-        { NULL, RTL_QUERY_REGISTRY_NOEXPAND | RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK,
-          L"PortName", NULL, REG_SZ << 24 | REG_SZ, NULL, sizeof(UNICODE_STRING) },
-    };
-    const UNICODE_STRING DosDevices = RTL_CONSTANT_STRING(L"\\DosDevices\\");
     USHORT ComPortNameLength;
-    PWCHAR ComPortNameBuffer;
+    PWCHAR ComPortNameBuffer = NULL;
+    const UNICODE_STRING DosDevices = RTL_CONSTANT_STRING(L"\\DosDevices\\");
     PCONFIGURATION_INFORMATION ConfigInfo;
 
     PAGED_CODE();
@@ -71,41 +64,101 @@ Pl2303InitializeDevice(
         return Status;
     }
 
-    QueryTable[0].DefaultData = &Zero;
-    QueryTable[0].EntryContext = &SkipExternalNaming;
-    RtlInitEmptyUnicodeString(&EmptyString, NULL, 0);
-    QueryTable[1].DefaultData = &EmptyString;
-    QueryTable[1].EntryContext = &PortName;
-    Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE, KeyHandle, QueryTable, NULL, NULL);
-    (VOID)ZwClose(KeyHandle);
-    if (!NT_SUCCESS(Status))
+    ValueInformationLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[sizeof(ULONG)]);
+    ValueInformation = ExAllocatePoolWithTag(PagedPool, ValueInformationLength, PL2303_TAG);
+    if (!ValueInformation)
     {
-        Pl2303Error(          "%s. RtlQueryRegistryValues failed with %08lx\n",
-                    __FUNCTION__, Status);
+        Pl2303Error(         "%s. Allocating registry value information failed\n",
+                    __FUNCTION__);
         RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
-        return Status;
+        return STATUS_NO_MEMORY;
     }
+    RtlInitUnicodeString(&ValueName, L"SkipExternalNaming");
+    Status = ZwQueryValueKey(KeyHandle,
+                             &ValueName,
+                             KeyValuePartialInformation,
+                             ValueInformation,
+                             ValueInformationLength,
+                             &ValueInformationLength);
 
-    if (!SkipExternalNaming && PortName.Buffer)
+    if (NT_SUCCESS(Status) &&
+        ValueInformationLength == (ULONG)FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,
+                                                      Data[sizeof(ULONG)]) &&
+        ValueInformation->Type == REG_DWORD &&
+        ValueInformation->DataLength == sizeof(ULONG))
     {
-        ComPortNameLength = DosDevices.Length + PortName.Length;
-        ComPortNameBuffer = ExAllocatePoolWithTag(PagedPool, ComPortNameLength, PL2303_TAG);
-        if (!ComPortNameBuffer)
-        {
-            Pl2303Error(         "%s. Allocating COM port name failed\n",
-                        __FUNCTION__);
-            //RtlFreeUnicodeString(&PortName);
-            RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
-            return STATUS_NO_MEMORY;
-        }
-        RtlInitEmptyUnicodeString(&DeviceExtension->ComPortName, ComPortNameBuffer, ComPortNameLength);
-        RtlCopyUnicodeString(&DeviceExtension->ComPortName, &DosDevices);
-        RtlAppendUnicodeStringToString(&DeviceExtension->ComPortName, &PortName);
+        SkipExternalNaming = *(PCULONG)ValueInformation->Data;
     }
     else
-        ASSERT(DeviceExtension->ComPortName.Buffer == NULL);
-    if (PortName.Buffer)
-        ;//RtlFreeUnicodeString(&PortName);
+    {
+        SkipExternalNaming = 0;
+    }
+    ExFreePoolWithTag(ValueInformation, PL2303_TAG);
+
+    if (!SkipExternalNaming)
+    {
+        RtlInitUnicodeString(&ValueName, L"PortName");
+        Status = ZwQueryValueKey(KeyHandle,
+                                 &ValueName,
+                                 KeyValuePartialInformation,
+                                 NULL,
+                                 0,
+                                 &ValueInformationLength);
+        if (NT_SUCCESS(Status))
+        {
+            ASSERT(ValueInformationLength != 0);
+            ValueInformation = ExAllocatePoolWithTag(PagedPool,
+                                                     ValueInformationLength,
+                                                     PL2303_TAG);
+            if (!ValueInformation)
+            {
+                Pl2303Error(         "%s. Allocating registry value information failed\n",
+                            __FUNCTION__);
+                RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
+                return STATUS_NO_MEMORY;
+            }
+            Status = ZwQueryValueKey(KeyHandle,
+                                     &ValueName,
+                                     KeyValuePartialInformation,
+                                     ValueInformation,
+                                     ValueInformationLength,
+                                     &ValueInformationLength);
+            if (!NT_SUCCESS(Status))
+            {
+                Pl2303Error(         "%s. ZwQueryValueKey failed with %08lx\n",
+                            __FUNCTION__, Status);
+                ExFreePoolWithTag(ValueInformation, PL2303_TAG);
+                RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
+                return Status;
+            }
+            // TODO: handle these properly instead of asserting
+            ASSERT(ValueInformation->Type == REG_SZ);
+            ASSERT(ValueInformation->Data[ValueInformation->DataLength - 1] == 0);
+            ASSERT(ValueInformation->Data[ValueInformation->DataLength - 2] == 0);
+            ASSERT(ValueInformation->DataLength < MAXUSHORT);
+            ComPortNameLength = DosDevices.Length + (USHORT)ValueInformation->DataLength;
+            ComPortNameBuffer = ExAllocatePoolWithTag(PagedPool,
+                                                      ComPortNameLength,
+                                                      PL2303_TAG);
+            if (!ComPortNameBuffer)
+            {
+                Pl2303Error(         "%s. Allocating COM port name failed\n",
+                            __FUNCTION__);
+                ExFreePoolWithTag(ValueInformation, PL2303_TAG);
+                RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
+                return STATUS_NO_MEMORY;
+            }
+            RtlInitEmptyUnicodeString(&DeviceExtension->ComPortName,
+                                      ComPortNameBuffer,
+                                      ComPortNameLength);
+            RtlCopyUnicodeString(&DeviceExtension->ComPortName, &DosDevices);
+            (VOID)RtlAppendUnicodeToString(&DeviceExtension->ComPortName,
+                                           (PCWSTR)ValueInformation->Data);
+
+            ExFreePoolWithTag(ValueInformation, PL2303_TAG);
+        }
+    }
+    ASSERT(DeviceExtension->ComPortName.Buffer == ComPortNameBuffer);
 
     Pl2303Debug(         "%s. COM Port name is is '%wZ'\n",
                 __FUNCTION__, &DeviceExtension->ComPortName);
