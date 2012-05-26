@@ -127,11 +127,12 @@ Pl2303UsbGetDescriptor(
     {
         Pl2303Error(         "%s. Urb failed with %08lx\n",
                     __FUNCTION__, Urb->UrbHeader.Status);
+        Status = Urb->UrbHeader.Status;
         ExFreePoolWithTag(*Buffer, PL2303_TAG);
         *Buffer = NULL;
         ExFreePoolWithTag(Urb, PL2303_URB_TAG);
         *BufferLength = 0;
-        return Urb->UrbHeader.Status;
+        return Status;
     }
 
     *BufferLength = Urb->UrbControlDescriptorRequest.TransferBufferLength;
