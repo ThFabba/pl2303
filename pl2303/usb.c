@@ -320,9 +320,6 @@ Pl2303UsbConfigureDevice(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    Pl2303Debug(         "%s. MaximumTransferSize=%u\n",
-                __FUNCTION__, Urb->UrbSelectConfiguration.Interface.Pipes[0].MaximumTransferSize);
-
     Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
     if (!NT_SUCCESS(Status))
     {
