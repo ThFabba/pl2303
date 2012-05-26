@@ -5,6 +5,8 @@ DRIVER_INITIALIZE DriverEntry;
 static DRIVER_UNLOAD Pl2303Unload;
 __drv_dispatchType(IRP_MJ_POWER)
 static DRIVER_DISPATCH Pl2303DispatchPower;
+__drv_dispatchType(IRP_MJ_SYSTEM_CONTROL)
+static DRIVER_DISPATCH Pl2303DispatchSystemControl;
 __drv_dispatchType(IRP_MJ_CREATE)
 __drv_dispatchType(IRP_MJ_CLOSE)
 static DRIVER_DISPATCH Pl2303DispatchCreateClose;
@@ -15,6 +17,7 @@ static DRIVER_DISPATCH Pl2303DispatchRead;
 #pragma alloc_text(INIT, DriverEntry)
 #pragma alloc_text(PAGE, Pl2303Unload)
 #pragma alloc_text(PAGE, Pl2303DispatchPower)
+#pragma alloc_text(PAGE, Pl2303DispatchSystemControl)
 #pragma alloc_text(PAGE, Pl2303DispatchCreateClose)
 #pragma alloc_text(PAGE, Pl2303DispatchRead)
 #endif /* defined ALLOC_PRAGMA */
@@ -34,6 +37,7 @@ DriverEntry(
     DriverObject->DriverExtension->AddDevice = Pl2303AddDevice;
     DriverObject->MajorFunction[IRP_MJ_PNP] = Pl2303DispatchPnp;
     DriverObject->MajorFunction[IRP_MJ_POWER] = Pl2303DispatchPower;
+    DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = Pl2303DispatchSystemControl;
     DriverObject->MajorFunction[IRP_MJ_CREATE] = Pl2303DispatchCreateClose;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = Pl2303DispatchCreateClose;
     DriverObject->MajorFunction[IRP_MJ_READ] = Pl2303DispatchRead;
@@ -88,6 +92,41 @@ Pl2303DispatchPower(
     PoStartNextPowerIrp(Irp);
     IoSkipCurrentIrpStackLocation(Irp);
     return PoCallDriver(DeviceExtension->LowerDevice, Irp);
+}
+
+static
+NTSTATUS
+NTAPI
+Pl2303DispatchSystemControl(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp)
+{
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_EXTENSION DeviceExtension;
+
+    PAGED_CODE();
+
+    Pl2303Debug(         "%s. DeviceObject=%p, Irp=%p\n",
+                __FUNCTION__, DeviceObject,    Irp);
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    ASSERT(IoStack->MajorFunction == IRP_MJ_SYSTEM_CONTROL);
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    if (DeviceExtension->PnpState == Deleted)
+    {
+        Pl2303Warn(         "%s. Device already deleted\n",
+                   __FUNCTION__);
+        Status = STATUS_NO_SUCH_DEVICE;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
+    IoSkipCurrentIrpStackLocation(Irp);
+    return IoCallDriver(DeviceExtension->LowerDevice, Irp);
 }
 
 static
