@@ -458,6 +458,7 @@ Pl2303DispatchPnp(
             {
                 Pl2303Warn(         "%s. IRP_MN_START_DEVICE failed with %08lx\n",
                            __FUNCTION__, Status);
+                Irp->IoStatus.Status = Status;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
                 return Status;
             }
@@ -467,11 +468,13 @@ Pl2303DispatchPnp(
             {
                 Pl2303Error(         "%s. Pl2303StartDevice failed with %08lx\n",
                             __FUNCTION__, Status);
+                Irp->IoStatus.Status = Status;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
                 return Status;
             }
 
             DeviceExtension->PnpState = Started;
+            Irp->IoStatus.Status = Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
         case IRP_MN_QUERY_STOP_DEVICE:
