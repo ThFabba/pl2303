@@ -380,6 +380,7 @@ Pl2303UsbStart(
     PUSB_DEVICE_DESCRIPTOR DeviceDescriptor;
     PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptor;
     PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
+    UCHAR Buffer[1];
 
     PAGED_CODE();
 
@@ -538,6 +539,42 @@ Pl2303UsbStart(
         return Status;
     }
     ExFreePoolWithTag(Descriptor, PL2303_TAG);
+
+    /* TODO: Buffer should probably be nonpaged */
+    /* TODO: failures here should give a debug message */
+    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8484, 0);
+    if (!NT_SUCCESS(Status))
+        return Status;
+    Status = Pl2303UsbVendorWrite(DeviceObject, 0x0404, 0);
+    if (!NT_SUCCESS(Status))
+        return Status;
+    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8484, 0);
+    if (!NT_SUCCESS(Status))
+        return Status;
+    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8383, 0);
+    if (!NT_SUCCESS(Status))
+        return Status;
+    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8484, 0);
+    if (!NT_SUCCESS(Status))
+        return Status;
+    Status = Pl2303UsbVendorWrite(DeviceObject, 0x0404, 0);
+    if (!NT_SUCCESS(Status))
+        return Status;
+    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8484, 0);
+    if (!NT_SUCCESS(Status))
+        return Status;
+    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8383, 0);
+    if (!NT_SUCCESS(Status))
+        return Status;
+    Status = Pl2303UsbVendorWrite(DeviceObject, 0, 1);
+    if (!NT_SUCCESS(Status))
+        return Status;
+    Status = Pl2303UsbVendorWrite(DeviceObject, 1, 0);
+    if (!NT_SUCCESS(Status))
+        return Status;
+    Status = Pl2303UsbVendorWrite(DeviceObject, 2, 0x44);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     return Status;
 }
