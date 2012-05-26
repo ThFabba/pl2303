@@ -151,6 +151,8 @@ Pl2303UsbStart(
     PUSB_DEVICE_DESCRIPTOR DeviceDescriptor;
     PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptor;
     PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
+    PURB Urb;
+    USBD_INTERFACE_LIST_ENTRY InterfaceList[2];
 
     PAGED_CODE();
 
@@ -253,6 +255,14 @@ Pl2303UsbStart(
                               ConfigDescriptor->bmAttributes,
                               ConfigDescriptor->MaxPower);
 
+    if (ConfigDescriptor->bNumInterfaces != 1)
+    {
+        Pl2303Error(         "%s. Configuration contains %u interfaces, expected one\n",
+                    __FUNCTION__, ConfigDescriptor->bNumInterfaces);
+        ExFreePoolWithTag(Descriptor, PL2303_TAG);
+        return STATUS_DEVICE_CONFIGURATION_ERROR;
+    }
+
     InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigDescriptor,
                                                               ConfigDescriptor,
                                                               0,
@@ -288,6 +298,36 @@ Pl2303UsbStart(
                               InterfaceDescriptor->bInterfaceProtocol,
                               InterfaceDescriptor->iInterface);
 
+    RtlZeroMemory(InterfaceList, sizeof(InterfaceList));
+    InterfaceList[0].InterfaceDescriptor = InterfaceDescriptor;
+
+    Urb = USBD_CreateConfigurationRequestEx(ConfigDescriptor,
+                                            InterfaceList);
+    if (!Urb)
+    {
+        Pl2303Error(         "%s. USBD_CreateConfigurationRequestEx failed\n",
+                    __FUNCTION__);
+        ExFreePoolWithTag(Descriptor, PL2303_TAG);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Pl2303Debug(         "%s. MaximumTransferSize=%u\n",
+                __FUNCTION__, Urb->UrbSelectConfiguration.Interface.Pipes[0].MaximumTransferSize);
+
+    Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
+    if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx\n",
+                    __FUNCTION__, Status);
+        ExFreePool(Urb);
+        ExFreePoolWithTag(Descriptor, PL2303_TAG);
+        return Status;
+    }
+
+    Pl2303Debug(         "%s. NumberOfPipes=%u\n",
+                    __FUNCTION__, Urb->UrbSelectConfiguration.Interface.NumberOfPipes);
+
+    ExFreePool(Urb);
     ExFreePoolWithTag(Descriptor, PL2303_TAG);
 
     return Status;
@@ -298,13 +338,32 @@ Pl2303UsbStop(
     _In_ PDEVICE_OBJECT DeviceObject)
 {
     NTSTATUS Status;
+    USBD_INTERFACE_LIST_ENTRY InterfaceList[1];
+    PURB Urb;
 
     PAGED_CODE();
 
     Pl2303Debug(         "%s. DeviceObject=%p\n",
                 __FUNCTION__, DeviceObject);
 
-    Status = STATUS_SUCCESS;
+    RtlZeroMemory(InterfaceList, sizeof(InterfaceList));
+    Urb = USBD_CreateConfigurationRequestEx(NULL,
+                                            InterfaceList);
+    if (!Urb)
+    {
+        Pl2303Error(         "%s. USBD_CreateConfigurationRequestEx failed\n",
+                    __FUNCTION__);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
+    if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx\n",
+                    __FUNCTION__, Status);
+        ExFreePool(Urb);
+        return Status;
+    }
+    ExFreePool(Urb);
 
     return Status;
 }
