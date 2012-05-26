@@ -8,8 +8,9 @@ static DRIVER_DISPATCH Pl2303DispatchPower;
 __drv_dispatchType(IRP_MJ_SYSTEM_CONTROL)
 static DRIVER_DISPATCH Pl2303DispatchSystemControl;
 __drv_dispatchType(IRP_MJ_CREATE)
+static DRIVER_DISPATCH Pl2303DispatchCreate;
 __drv_dispatchType(IRP_MJ_CLOSE)
-static DRIVER_DISPATCH Pl2303DispatchCreateClose;
+static DRIVER_DISPATCH Pl2303DispatchClose;
 __drv_dispatchType(IRP_MJ_READ)
 static DRIVER_DISPATCH Pl2303DispatchRead;
 
@@ -18,7 +19,8 @@ static DRIVER_DISPATCH Pl2303DispatchRead;
 #pragma alloc_text(PAGE, Pl2303Unload)
 #pragma alloc_text(PAGE, Pl2303DispatchPower)
 #pragma alloc_text(PAGE, Pl2303DispatchSystemControl)
-#pragma alloc_text(PAGE, Pl2303DispatchCreateClose)
+#pragma alloc_text(PAGE, Pl2303DispatchCreate)
+#pragma alloc_text(PAGE, Pl2303DispatchClose)
 #pragma alloc_text(PAGE, Pl2303DispatchRead)
 #endif /* defined ALLOC_PRAGMA */
 
@@ -38,8 +40,8 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_PNP] = Pl2303DispatchPnp;
     DriverObject->MajorFunction[IRP_MJ_POWER] = Pl2303DispatchPower;
     DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = Pl2303DispatchSystemControl;
-    DriverObject->MajorFunction[IRP_MJ_CREATE] = Pl2303DispatchCreateClose;
-    DriverObject->MajorFunction[IRP_MJ_CLOSE] = Pl2303DispatchCreateClose;
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = Pl2303DispatchCreate;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = Pl2303DispatchClose;
     DriverObject->MajorFunction[IRP_MJ_READ] = Pl2303DispatchRead;
 
     return STATUS_SUCCESS;
@@ -132,7 +134,7 @@ Pl2303DispatchSystemControl(
 static
 NTSTATUS
 NTAPI
-Pl2303DispatchCreateClose(
+Pl2303DispatchCreate(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp)
 {
@@ -143,12 +145,37 @@ Pl2303DispatchCreateClose(
 
     PAGED_CODE();
 
-    Pl2303Debug(          "%s. DeviceObject=%p, Irp=%p\n",
-                 __FUNCTION__, DeviceObject,    Irp);
+    Pl2303Debug(         "%s. DeviceObject=%p, Irp=%p\n",
+                __FUNCTION__, DeviceObject,    Irp);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack->MajorFunction == IRP_MJ_CREATE ||
-           IoStack->MajorFunction == IRP_MJ_CLOSE);
+    ASSERT(IoStack->MajorFunction == IRP_MJ_CREATE);
+
+    Status = STATUS_SUCCESS;
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
+}
+
+static
+NTSTATUS
+NTAPI
+Pl2303DispatchClose(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp)
+{
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    PAGED_CODE();
+
+    Pl2303Debug(         "%s. DeviceObject=%p, Irp=%p\n",
+                __FUNCTION__, DeviceObject,    Irp);
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    ASSERT(IoStack->MajorFunction == IRP_MJ_CLOSE);
 
     Status = STATUS_SUCCESS;
     Irp->IoStatus.Status = Status;
