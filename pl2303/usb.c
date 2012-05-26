@@ -25,11 +25,14 @@ Pl2303UsbSubmitUrb(
     PIRP Irp;
     IO_STATUS_BLOCK IoStatus;
     PIO_STACK_LOCATION IoStack;
+    KEVENT Event;
 
     PAGED_CODE();
 
     Pl2303Debug(         "%s. DeviceObject=%p, Urb=%p\n",
                 __FUNCTION__, DeviceObject,    Urb);
+
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
     Irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_USB_SUBMIT_URB,
                                         DeviceExtension->LowerDevice,
@@ -38,7 +41,7 @@ Pl2303UsbSubmitUrb(
                                         NULL,
                                         0,
                                         TRUE,
-                                        NULL,
+                                        &Event,
                                         &IoStatus);
     if (!Irp)
     {
@@ -48,18 +51,16 @@ Pl2303UsbSubmitUrb(
     }
 
     IoStack = IoGetNextIrpStackLocation(Irp);
+    ASSERT(IoStack->MajorFunction == IRP_MJ_INTERNAL_DEVICE_CONTROL);
     IoStack->Parameters.Others.Argument1 = Urb;
 
-    if (IoForwardIrpSynchronously(DeviceExtension->LowerDevice, Irp))
-        Status = Irp->IoStatus.Status;
-    else
-    {
-        Pl2303Error(         "%s. IoForwardIrpSynchronously failed\n",
-                    __FUNCTION__);
-        Status = STATUS_UNSUCCESSFUL;
-    }
+    Status = IoCallDriver(DeviceExtension->LowerDevice, Irp);
 
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        Status = IoStatus.Status;
+    }
 
     return Status;
 }
@@ -104,7 +105,6 @@ Pl2303UsbGetDescriptor(
         ExFreePoolWithTag(Urb, PL2303_URB_TAG);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    RtlFillMemory(*Buffer, *BufferLength, 0xaa);
 
     UsbBuildGetDescriptorRequest(Urb,
                                  sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
@@ -115,8 +115,6 @@ Pl2303UsbGetDescriptor(
                                  NULL,
                                  *BufferLength,
                                  NULL);
-
-    Urb->UrbHeader.Function = UrbFunction;
 
     Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Urb->UrbHeader.Status))
