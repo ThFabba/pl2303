@@ -206,7 +206,7 @@ Pl2303UsbStart(
 
     DescriptorLength = sizeof(USB_CONFIGURATION_DESCRIPTOR);
     Status = Pl2303UsbGetDescriptor(DeviceObject,
-                                    USB_DEVICE_DESCRIPTOR_TYPE,
+                                    USB_CONFIGURATION_DESCRIPTOR_TYPE,
                                     &Descriptor,
                                     &DescriptorLength);
     if (!NT_SUCCESS(Status))
@@ -222,7 +222,7 @@ Pl2303UsbStart(
     DescriptorLength = ConfigDescriptor->wTotalLength;
     ExFreePoolWithTag(Descriptor, PL2303_TAG);
     Status = Pl2303UsbGetDescriptor(DeviceObject,
-                                    USB_DEVICE_DESCRIPTOR_TYPE,
+                                    USB_CONFIGURATION_DESCRIPTOR_TYPE,
                                     &Descriptor,
                                     &DescriptorLength);
     if (!NT_SUCCESS(Status))
