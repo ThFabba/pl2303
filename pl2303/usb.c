@@ -782,7 +782,7 @@ Pl2303UsbRead(
                                            sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
                                            DeviceExtension->BulkInPipe,
                                            Irp->AssociatedIrp.SystemBuffer,
-                                           Irp->MdlAddress,
+                                           NULL,
                                            IoStack->Parameters.Read.Length,
                                            USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK,
                                            NULL);
