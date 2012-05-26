@@ -734,7 +734,18 @@ Pl2303UsbReadCompletion(
         IoMarkIrpPending(Irp);
 
     if (NT_SUCCESS(Irp->IoStatus.Status))
-        Irp->IoStatus.Information = Urb->UrbBulkOrInterruptTransfer.TransferBufferLength;
+    {
+        if (USBD_SUCCESS(Urb->UrbHeader.Status))
+            Irp->IoStatus.Information = Urb->UrbBulkOrInterruptTransfer.TransferBufferLength;
+        else
+            Pl2303Warn(         "%s. URB failed with %08lx\n",
+                       __FUNCTION__, Urb->UrbHeader.Status);
+    }
+    else
+    {
+        Pl2303Warn(         "%s. IRP failed with %08lx\n",
+                   __FUNCTION__, Irp->IoStatus.Status);
+    }
 
     ExFreePoolWithTag(Urb, PL2303_URB_TAG);
 
