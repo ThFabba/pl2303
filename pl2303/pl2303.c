@@ -163,8 +163,10 @@ Pl2303DispatchRead(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     PIO_STACK_LOCATION IoStack;
+    PVOID Buffer;
+    ULONG BufferLength;
 
     PAGED_CODE();
 
@@ -174,10 +176,21 @@ Pl2303DispatchRead(
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     ASSERT(IoStack->MajorFunction == IRP_MJ_READ);
 
-    *(PCHAR)Irp->AssociatedIrp.SystemBuffer = 'A';
-    Irp->IoStatus.Information = 1;
+    Buffer = Irp->AssociatedIrp.SystemBuffer;
+    BufferLength = IoStack->Parameters.Read.Length;
 
-    Status = STATUS_SUCCESS;
+    if (BufferLength)
+    {
+        /* TODO: this stuff can't be synchronous! */
+        Status = Pl2303UsbRead(DeviceObject, Buffer, &BufferLength);
+        if (!NT_SUCCESS(Status))
+        {
+            Pl2303Error(         "%s. Pl2303UsbRead failed with %08lx\n",
+                        __FUNCTION__, Status);
+        }
+    }
+
+    Irp->IoStatus.Information = BufferLength;
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
