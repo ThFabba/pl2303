@@ -2,7 +2,6 @@
 
 static NTSTATUS Pl2303UsbSubmitUrb(_In_ PDEVICE_OBJECT DeviceObject, _In_ PURB Urb);
 static NTSTATUS Pl2303UsbGetDescriptor(_In_ PDEVICE_OBJECT DeviceObject,
-                                       _In_ USHORT UrbFunction,
                                        _In_ UCHAR DescriptorType,
                                        _Out_ PVOID *Buffer,
                                        _Inout_ PULONG BufferLength);
@@ -69,7 +68,6 @@ static
 NTSTATUS
 Pl2303UsbGetDescriptor(
     _In_ PDEVICE_OBJECT DeviceObject,
-    _In_ USHORT UrbFunction,
     _In_ UCHAR DescriptorType,
     _Out_ PVOID *Buffer,
     _Inout_ PULONG BufferLength)
@@ -82,10 +80,8 @@ Pl2303UsbGetDescriptor(
     ASSERT(BufferLength);
     ASSERT(*BufferLength > 0);
 
-    Pl2303Debug(         "%s. DeviceObject=%p, UrbFunction=%u, DescriptorType=%u, Buffer=%p, "
-                             "BufferLength=%p\n",
-                __FUNCTION__, DeviceObject,    UrbFunction,    DescriptorType,    Buffer,
-                              BufferLength);
+    Pl2303Debug(         "%s. DeviceObject=%p, DescriptorType=%u, Buffer=%p, BufferLength=%p\n",
+                __FUNCTION__, DeviceObject,    DescriptorType,    Buffer,    BufferLength);
 
     Urb = ExAllocatePoolWithTag(NonPagedPool,
                                 sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
@@ -150,7 +146,6 @@ Pl2303UsbStart(
 
     DeviceDescriptorLength = sizeof(USB_DEVICE_DESCRIPTOR);
     Status = Pl2303UsbGetDescriptor(DeviceObject,
-                                    URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE,
                                     USB_DEVICE_DESCRIPTOR_TYPE,
                                     &DeviceDescriptor,
                                     &DeviceDescriptorLength);
