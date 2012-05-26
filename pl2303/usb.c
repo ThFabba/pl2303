@@ -16,7 +16,10 @@ static NTSTATUS Pl2303UsbConfigureDevice(_In_ PDEVICE_OBJECT DeviceObject,
                                          _In_ PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptor,
                                          _In_ PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor);
 static NTSTATUS Pl2303UsbUnconfigureDevice(_In_ PDEVICE_OBJECT DeviceObject);
-static IO_COMPLETION_ROUTINE Pl2303UsbReadCompletion;
+_Function_class_(IO_COMPLETION_ROUTINE)
+static NTSTATUS NTAPI Pl2303UsbReadCompletion(_In_ PDEVICE_OBJECT DeviceObject,
+                                              _In_ PIRP Irp,
+                                              _In_reads_(sizeof(URB)) PVOID Context);
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, Pl2303UsbSubmitUrb)
@@ -714,13 +717,14 @@ Pl2303UsbSetLine(
     return Status;
 }
 
+_Function_class_(IO_COMPLETION_ROUTINE)
 static
 NTSTATUS
 NTAPI
 Pl2303UsbReadCompletion(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp,
-    _In_ PVOID Context)
+    _In_reads_(sizeof(URB)) PVOID Context)
 {
     PURB Urb = Context;
 
