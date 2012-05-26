@@ -296,6 +296,10 @@ Pl2303UsbStart(
                               DeviceDescriptor->iSerialNumber,
                               DeviceDescriptor->bNumConfigurations);
 
+    /* We only support PL2303 HX right now */
+    ASSERT(DeviceDescriptor->bDeviceClass != USB_DEVICE_CLASS_COMMUNICATIONS);
+    ASSERT(DeviceDescriptor->bMaxPacketSize0 == 64);
+
     ExFreePoolWithTag(Descriptor, PL2303_TAG);
 
     DescriptorLength = sizeof(USB_CONFIGURATION_DESCRIPTOR);
