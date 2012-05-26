@@ -103,3 +103,6 @@ DRIVER_DISPATCH Pl2303DispatchPnp;
 /* usb.c */
 NTSTATUS Pl2303UsbStart(_In_ PDEVICE_OBJECT DeviceObject);
 NTSTATUS Pl2303UsbStop(_In_ PDEVICE_OBJECT DeviceObject);
+NTSTATUS Pl2303UsbRead(_In_ PDEVICE_OBJECT DeviceObject,
+                       _Out_ PVOID Buffer,
+                       _Inout_ PULONG BufferLength);

@@ -26,6 +26,7 @@ static NTSTATUS Pl2303UsbUnconfigureDevice(_In_ PDEVICE_OBJECT DeviceObject);
 #pragma alloc_text(PAGE, Pl2303UsbUnconfigureDevice)
 #pragma alloc_text(PAGE, Pl2303UsbStart)
 #pragma alloc_text(PAGE, Pl2303UsbStop)
+#pragma alloc_text(PAGE, Pl2303UsbRead)
 #endif /* defined ALLOC_PRAGMA */
 
 static
@@ -631,6 +632,65 @@ Pl2303UsbStop(
                 __FUNCTION__, DeviceObject);
 
     Status = Pl2303UsbUnconfigureDevice(DeviceObject);
+
+    return Status;
+}
+
+NTSTATUS
+Pl2303UsbRead(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Out_ PVOID Buffer,
+    _Inout_ PULONG BufferLength)
+{
+    NTSTATUS Status;
+    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    PURB Urb;
+
+    PAGED_CODE();
+
+    Pl2303Debug(         "%s. DeviceObject=%p, Buffer=%p, BufferLength=%p\n",
+                __FUNCTION__, DeviceObject,    Buffer,    BufferLength);
+
+    Urb = ExAllocatePoolWithTag(NonPagedPool,
+                                sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
+                                PL2303_URB_TAG);
+    if (!Urb)
+    {
+        Pl2303Error(         "%s. Allocating URB failed\n",
+                    __FUNCTION__);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    UsbBuildInterruptOrBulkTransferRequest(Urb,
+                                           sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
+                                           DeviceExtension->BulkInPipe,
+                                           Buffer,
+                                           NULL,
+                                           *BufferLength,
+                                           USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK,
+                                           NULL);
+
+    Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
+    if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx\n",
+                    __FUNCTION__, Status);
+        ExFreePoolWithTag(Urb, PL2303_URB_TAG);
+        *BufferLength = 0;
+        return Status;
+    }
+    if (!NT_SUCCESS(Urb->UrbHeader.Status))
+    {
+        Pl2303Error(         "%s. URB failed with %08lx\n",
+                    __FUNCTION__, Urb->UrbHeader.Status);
+        Status = Urb->UrbHeader.Status;
+        ExFreePoolWithTag(Urb, PL2303_URB_TAG);
+        *BufferLength = 0;
+        return Status;
+    }
+
+    *BufferLength = Urb->UrbBulkOrInterruptTransfer.TransferBufferLength;
+    ExFreePoolWithTag(Urb, PL2303_URB_TAG);
 
     return Status;
 }
