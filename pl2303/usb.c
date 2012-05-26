@@ -138,6 +138,8 @@ Pl2303UsbStart(
     PVOID Descriptor;
     ULONG DescriptorLength;
     PUSB_DEVICE_DESCRIPTOR DeviceDescriptor;
+    PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptor;
+    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
 
     PAGED_CODE();
 
@@ -149,7 +151,6 @@ Pl2303UsbStart(
                                     USB_DEVICE_DESCRIPTOR_TYPE,
                                     &Descriptor,
                                     &DescriptorLength);
-
     if (!NT_SUCCESS(Status))
     {
         Pl2303Error(         "%s. Pl2303UsbGetDescriptor failed with %08lx\n",
@@ -189,6 +190,92 @@ Pl2303UsbStart(
                               DeviceDescriptor->iProduct,
                               DeviceDescriptor->iSerialNumber,
                               DeviceDescriptor->bNumConfigurations);
+
+    ExFreePoolWithTag(Descriptor, PL2303_TAG);
+
+    DescriptorLength = sizeof(USB_CONFIGURATION_DESCRIPTOR);
+    Status = Pl2303UsbGetDescriptor(DeviceObject,
+                                    USB_DEVICE_DESCRIPTOR_TYPE,
+                                    &Descriptor,
+                                    &DescriptorLength);
+    if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbGetDescriptor failed with %08lx\n",
+                    __FUNCTION__, Status);
+        return Status;
+    }
+    ASSERT(DescriptorLength == sizeof(USB_CONFIGURATION_DESCRIPTOR));
+
+    ConfigDescriptor = Descriptor;
+    ASSERT(ConfigDescriptor->wTotalLength != 0);
+    DescriptorLength = ConfigDescriptor->wTotalLength;
+    ExFreePoolWithTag(Descriptor, PL2303_TAG);
+    Status = Pl2303UsbGetDescriptor(DeviceObject,
+                                    USB_DEVICE_DESCRIPTOR_TYPE,
+                                    &Descriptor,
+                                    &DescriptorLength);
+    if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbGetDescriptor failed with %08lx\n",
+                    __FUNCTION__, Status);
+        return Status;
+    }
+
+    ConfigDescriptor = Descriptor;
+    ASSERT(DescriptorLength == ConfigDescriptor->wTotalLength);
+
+    Pl2303Debug(         "%s. Config descriptor: "
+                                               "bLength=%u, "
+                                               "bDescriptorType=%u, "
+                                               "wTotalLength=%u, "
+                                               "bNumInterfaces=%u, "
+                                               "bConfigurationValue=%u, "
+                                               "iConfiguration=%u, "
+                                               "bmAttributes=0x%x, "
+                                               "MaxPower=%u\n",
+                __FUNCTION__, ConfigDescriptor->bLength,
+                              ConfigDescriptor->bDescriptorType,
+                              ConfigDescriptor->wTotalLength,
+                              ConfigDescriptor->bNumInterfaces,
+                              ConfigDescriptor->bConfigurationValue,
+                              ConfigDescriptor->iConfiguration,
+                              ConfigDescriptor->bmAttributes,
+                              ConfigDescriptor->MaxPower);
+
+    InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigDescriptor,
+                                                              ConfigDescriptor,
+                                                              0,
+                                                              0,
+                                                              USB_DEVICE_CLASS_VENDOR_SPECIFIC,
+                                                              0,
+                                                              0);
+    if (!InterfaceDescriptor)
+    {
+        Pl2303Error(         "%s. USBD_ParseConfigurationDescriptorEx failed\n",
+                    __FUNCTION__);
+        ExFreePoolWithTag(Descriptor, PL2303_TAG);
+        return STATUS_DEVICE_CONFIGURATION_ERROR;
+    }
+
+    Pl2303Debug(         "%s. Interface descriptor: "
+                                                  "bLength=%u, "
+                                                  "bDescriptorType=%u, "
+                                                  "bInterfaceNumber=%u, "
+                                                  "bAlternateSetting=%u, "
+                                                  "bNumEndpoints=%u, "
+                                                  "bInterfaceClass=0x%x, "
+                                                  "bInterfaceSubClass=0x%x, "
+                                                  "bInterfaceProtocol=0x%x, "
+                                                  "iInterface=%u\n"
+                __FUNCTION__, InterfaceDescriptor->bLength,
+                              InterfaceDescriptor->bDescriptorType,
+                              InterfaceDescriptor->bInterfaceNumber,
+                              InterfaceDescriptor->bAlternateSetting,
+                              InterfaceDescriptor->bNumEndpoints,
+                              InterfaceDescriptor->bInterfaceClass,
+                              InterfaceDescriptor->bInterfaceSubClass,
+                              InterfaceDescriptor->bInterfaceProtocol,
+                              InterfaceDescriptor->iInterface);
 
     ExFreePoolWithTag(Descriptor, PL2303_TAG);
 

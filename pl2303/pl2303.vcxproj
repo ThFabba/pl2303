@@ -175,6 +175,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Vista Release|Win32'">
     <Link>
       <Version>0.0</Version>
+      <AdditionalDependencies>$(DDK_LIB_PATH)\usbd.lib;%(AdditionalDependencies);$(DDK_LIB_PATH)\BufferOverflowK.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib</AdditionalDependencies>
     </Link>
     <Inf>
       <TimeStamp>*</TimeStamp>
@@ -187,6 +188,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='2003 Debug|Win32'">
     <Link>
       <Version>0.0</Version>
+      <AdditionalDependencies>$(DDK_LIB_PATH)\usbd.lib;%(AdditionalDependencies);$(DDK_LIB_PATH)\BufferOverflowK.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib</AdditionalDependencies>
     </Link>
     <Inf>
       <TimeStamp>*</TimeStamp>
@@ -199,6 +201,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8 beta Release|Win32'">
     <Link>
       <Version>0.0</Version>
+      <AdditionalDependencies>$(DDK_LIB_PATH)\usbd.lib;%(AdditionalDependencies);$(DDK_LIB_PATH)\BufferOverflowK.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib</AdditionalDependencies>
     </Link>
     <Inf>
       <TimeStamp>*</TimeStamp>
@@ -211,6 +214,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Debug|Win32'">
     <Link>
       <Version>0.0</Version>
+      <AdditionalDependencies>$(DDK_LIB_PATH)\usbd.lib;%(AdditionalDependencies);$(DDK_LIB_PATH)\BufferOverflowK.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib</AdditionalDependencies>
     </Link>
     <Inf>
       <TimeStamp>*</TimeStamp>
@@ -223,6 +227,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8 beta Debug|Win32'">
     <Link>
       <Version>0.0</Version>
+      <AdditionalDependencies>$(DDK_LIB_PATH)\usbd.lib;%(AdditionalDependencies);$(DDK_LIB_PATH)\BufferOverflowK.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib</AdditionalDependencies>
     </Link>
     <Inf>
       <TimeStamp>*</TimeStamp>
@@ -235,6 +240,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Vista Debug|Win32'">
     <Link>
       <Version>0.0</Version>
+      <AdditionalDependencies>$(DDK_LIB_PATH)\usbd.lib;%(AdditionalDependencies);$(DDK_LIB_PATH)\BufferOverflowK.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib</AdditionalDependencies>
     </Link>
     <Inf>
       <TimeStamp>*</TimeStamp>
@@ -247,6 +253,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='2003 Release|Win32'">
     <Link>
       <Version>0.0</Version>
+      <AdditionalDependencies>$(DDK_LIB_PATH)\usbd.lib;%(AdditionalDependencies);$(DDK_LIB_PATH)\BufferOverflowK.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib</AdditionalDependencies>
     </Link>
     <Inf>
       <TimeStamp>*</TimeStamp>
@@ -259,6 +266,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Release|Win32'">
     <Link>
       <Version>0.0</Version>
+      <AdditionalDependencies>$(DDK_LIB_PATH)\usbd.lib;%(AdditionalDependencies);$(DDK_LIB_PATH)\BufferOverflowK.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib</AdditionalDependencies>
     </Link>
     <Inf>
       <TimeStamp>*</TimeStamp>
@@ -271,6 +279,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Vista Release|x64'">
     <Link>
       <Version>0.0</Version>
+      <AdditionalDependencies>$(DDK_LIB_PATH)\usbd.lib;%(AdditionalDependencies);$(DDK_LIB_PATH)\BufferOverflowK.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib</AdditionalDependencies>
     </Link>
     <Inf>
       <TimeStamp>*</TimeStamp>
@@ -283,6 +292,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='2003 Debug|x64'">
     <Link>
       <Version>0.0</Version>
+      <AdditionalDependencies>$(DDK_LIB_PATH)\usbd.lib;%(AdditionalDependencies);$(DDK_LIB_PATH)\BufferOverflowK.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib</AdditionalDependencies>
     </Link>
     <Inf>
       <TimeStamp>*</TimeStamp>
@@ -295,6 +305,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8 beta Release|x64'">
     <Link>
       <Version>0.0</Version>
+      <AdditionalDependencies>$(DDK_LIB_PATH)\usbd.lib;%(AdditionalDependencies);$(DDK_LIB_PATH)\BufferOverflowK.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib</AdditionalDependencies>
     </Link>
     <Inf>
       <TimeStamp>*</TimeStamp>
@@ -307,6 +318,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Debug|x64'">
     <Link>
       <Version>0.0</Version>
+      <AdditionalDependencies>$(DDK_LIB_PATH)\usbd.lib;%(AdditionalDependencies);$(DDK_LIB_PATH)\BufferOverflowK.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib</AdditionalDependencies>
     </Link>
     <Inf>
       <TimeStamp>*</TimeStamp>
@@ -319,6 +331,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8 beta Debug|x64'">
     <Link>
       <Version>0.0</Version>
+      <AdditionalDependencies>$(DDK_LIB_PATH)\usbd.lib;%(AdditionalDependencies);$(DDK_LIB_PATH)\BufferOverflowK.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib</AdditionalDependencies>
     </Link>
     <Inf>
       <TimeStamp>*</TimeStamp>
@@ -331,6 +344,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Vista Debug|x64'">
     <Link>
       <Version>0.0</Version>
+      <AdditionalDependencies>$(DDK_LIB_PATH)\usbd.lib;%(AdditionalDependencies);$(DDK_LIB_PATH)\BufferOverflowK.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib</AdditionalDependencies>
     </Link>
     <Inf>
       <TimeStamp>*</TimeStamp>
@@ -343,6 +357,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='2003 Release|x64'">
     <Link>
       <Version>0.0</Version>
+      <AdditionalDependencies>$(DDK_LIB_PATH)\usbd.lib;%(AdditionalDependencies);$(DDK_LIB_PATH)\BufferOverflowK.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib</AdditionalDependencies>
     </Link>
     <Inf>
       <TimeStamp>*</TimeStamp>
@@ -355,6 +370,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Release|x64'">
     <Link>
       <Version>0.0</Version>
+      <AdditionalDependencies>$(DDK_LIB_PATH)\usbd.lib;%(AdditionalDependencies);$(DDK_LIB_PATH)\BufferOverflowK.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib</AdditionalDependencies>
     </Link>
     <Inf>
       <TimeStamp>*</TimeStamp>
