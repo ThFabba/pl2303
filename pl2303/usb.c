@@ -357,11 +357,11 @@ Pl2303UsbStart(
 
     InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigDescriptor,
                                                               ConfigDescriptor,
-                                                              0,
-                                                              0,
-                                                              USB_DEVICE_CLASS_VENDOR_SPECIFIC,
-                                                              0,
-                                                              0);
+                                                              -1,
+                                                              -1,
+                                                              -1,
+                                                              -1,
+                                                              -1);
     if (!InterfaceDescriptor)
     {
         Pl2303Error(         "%s. USBD_ParseConfigurationDescriptorEx failed\n",
