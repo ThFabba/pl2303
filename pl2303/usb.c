@@ -277,7 +277,7 @@ Pl2303UsbStart(
                                                   "bInterfaceClass=0x%x, "
                                                   "bInterfaceSubClass=0x%x, "
                                                   "bInterfaceProtocol=0x%x, "
-                                                  "iInterface=%u\n"
+                                                  "iInterface=%u\n",
                 __FUNCTION__, InterfaceDescriptor->bLength,
                               InterfaceDescriptor->bDescriptorType,
                               InterfaceDescriptor->bInterfaceNumber,
