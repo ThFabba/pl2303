@@ -135,20 +135,20 @@ Pl2303UsbStart(
     _In_ PDEVICE_OBJECT DeviceObject)
 {
     NTSTATUS Status;
-    PVOID DeviceDescriptor;
-    ULONG DeviceDescriptorLength;
-    PUSB_DEVICE_DESCRIPTOR Descriptor;
+    PVOID Descriptor;
+    ULONG DescriptorLength;
+    PUSB_DEVICE_DESCRIPTOR DeviceDescriptor;
 
     PAGED_CODE();
 
     Pl2303Debug(         "%s. DeviceObject=%p\n",
                 __FUNCTION__, DeviceObject);
 
-    DeviceDescriptorLength = sizeof(USB_DEVICE_DESCRIPTOR);
+    DescriptorLength = sizeof(USB_DEVICE_DESCRIPTOR);
     Status = Pl2303UsbGetDescriptor(DeviceObject,
                                     USB_DEVICE_DESCRIPTOR_TYPE,
-                                    &DeviceDescriptor,
-                                    &DeviceDescriptorLength);
+                                    &Descriptor,
+                                    &DescriptorLength);
 
     if (!NT_SUCCESS(Status))
     {
@@ -156,41 +156,41 @@ Pl2303UsbStart(
                     __FUNCTION__, Status);
         return Status;
     }
-    ASSERT(DeviceDescriptorLength == sizeof(USB_DEVICE_DESCRIPTOR));
+    ASSERT(DescriptorLength == sizeof(USB_DEVICE_DESCRIPTOR));
 
-    Descriptor = DeviceDescriptor;
+    DeviceDescriptor = Descriptor;
 
     Pl2303Debug(         "%s. Device descriptor: "
-                                         "bLength=%u, "
-                                         "bDescriptorType=%u, "
-                                         "bcdUSB=0x%x, "
-                                         "bDeviceClass=0x%x, "
-                                         "bDeviceSubClass=0x%x, "
-                                         "bDeviceProtocol=0x%x, "
-                                         "bMaxPacketSize0=%u, "
-                                         "idVendor=0x%x, "
-                                         "idProduct=0x%x, "
-                                         "bcdDevice=0x%x, "
-                                         "iManufacturer=%u, "
-                                         "iProduct=%u, "
-                                         "iSerialNumber=%u, "
-                                         "bNumConfigurations=%u\n",
-                __FUNCTION__, Descriptor->bLength,
-                              Descriptor->bDescriptorType,
-                              Descriptor->bcdUSB,
-                              Descriptor->bDeviceClass,
-                              Descriptor->bDeviceSubClass,
-                              Descriptor->bDeviceProtocol,
-                              Descriptor->bMaxPacketSize0,
-                              Descriptor->idVendor,
-                              Descriptor->idProduct,
-                              Descriptor->bcdDevice,
-                              Descriptor->iManufacturer,
-                              Descriptor->iProduct,
-                              Descriptor->iSerialNumber,
-                              Descriptor->bNumConfigurations);
+                                               "bLength=%u, "
+                                               "bDescriptorType=%u, "
+                                               "bcdUSB=0x%x, "
+                                               "bDeviceClass=0x%x, "
+                                               "bDeviceSubClass=0x%x, "
+                                               "bDeviceProtocol=0x%x, "
+                                               "bMaxPacketSize0=%u, "
+                                               "idVendor=0x%x, "
+                                               "idProduct=0x%x, "
+                                               "bcdDevice=0x%x, "
+                                               "iManufacturer=%u, "
+                                               "iProduct=%u, "
+                                               "iSerialNumber=%u, "
+                                               "bNumConfigurations=%u\n",
+                __FUNCTION__, DeviceDescriptor->bLength,
+                              DeviceDescriptor->bDescriptorType,
+                              DeviceDescriptor->bcdUSB,
+                              DeviceDescriptor->bDeviceClass,
+                              DeviceDescriptor->bDeviceSubClass,
+                              DeviceDescriptor->bDeviceProtocol,
+                              DeviceDescriptor->bMaxPacketSize0,
+                              DeviceDescriptor->idVendor,
+                              DeviceDescriptor->idProduct,
+                              DeviceDescriptor->bcdDevice,
+                              DeviceDescriptor->iManufacturer,
+                              DeviceDescriptor->iProduct,
+                              DeviceDescriptor->iSerialNumber,
+                              DeviceDescriptor->bNumConfigurations);
 
-    ExFreePoolWithTag(DeviceDescriptor, PL2303_TAG);
+    ExFreePoolWithTag(Descriptor, PL2303_TAG);
 
     return Status;
 }
