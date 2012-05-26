@@ -38,6 +38,9 @@ typedef struct _DEVICE_EXTENSION
     UNICODE_STRING DeviceName;
     UNICODE_STRING InterfaceLinkName;
     UNICODE_STRING ComPortName;
+    USBD_PIPE_HANDLE BulkInPipe;
+    USBD_PIPE_HANDLE BulkOutPipe;
+    USBD_PIPE_HANDLE InterruptInPipe;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 /* Debugging functions */

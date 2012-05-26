@@ -290,8 +290,11 @@ Pl2303UsbConfigureDevice(
     _In_ PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor)
 {
     NTSTATUS Status;
+    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     PURB Urb;
     USBD_INTERFACE_LIST_ENTRY InterfaceList[2];
+    ULONG i;
+    PUSBD_PIPE_INFORMATION PipeInfo;
 
     PAGED_CODE();
 
@@ -324,6 +327,43 @@ Pl2303UsbConfigureDevice(
 
     Pl2303Debug(         "%s. NumberOfPipes=%u\n",
                     __FUNCTION__, Urb->UrbSelectConfiguration.Interface.NumberOfPipes);
+
+    for (i = 0; i < Urb->UrbSelectConfiguration.Interface.NumberOfPipes; i++)
+    {
+        PipeInfo = &Urb->UrbSelectConfiguration.Interface.Pipes[i];
+        
+        if (PipeInfo->PipeType == UsbdPipeTypeBulk &&
+            USB_ENDPOINT_DIRECTION_IN(PipeInfo->EndpointAddress) &&
+            !DeviceExtension->BulkInPipe)
+        {
+            DeviceExtension->BulkInPipe = PipeInfo->PipeHandle;
+        }
+
+        if (PipeInfo->PipeType == UsbdPipeTypeBulk &&
+            USB_ENDPOINT_DIRECTION_OUT(PipeInfo->EndpointAddress) &&
+            !DeviceExtension->BulkOutPipe)
+        {
+            DeviceExtension->BulkOutPipe = PipeInfo->PipeHandle;
+        }
+
+        if (PipeInfo->PipeType == UsbdPipeTypeInterrupt &&
+            USB_ENDPOINT_DIRECTION_IN(PipeInfo->EndpointAddress) &&
+            !DeviceExtension->InterruptInPipe)
+        {
+            DeviceExtension->InterruptInPipe = PipeInfo->PipeHandle;
+        }
+    }
+
+    if (!DeviceExtension->BulkInPipe ||
+        !DeviceExtension->BulkOutPipe ||
+        !DeviceExtension->InterruptInPipe)
+    {
+        Pl2303Error(         "%s. Invalid endpoint combination\n",
+                    __FUNCTION__, Status);
+        ASSERT(FALSE);
+        ExFreePool(Urb);
+        return STATUS_DEVICE_CONFIGURATION_ERROR;
+    }
 
     ExFreePool(Urb);
 
