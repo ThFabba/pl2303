@@ -7,9 +7,14 @@
 #include <usbdlib.h>
 #include <usbioctl.h>
 
+/* Pool tags */
 #define PL2303_TAG      '32LP'
 #define PL2303_URB_TAG  'U2LP'
 
+/* USB requests */
+#define PL2303_VENDOR_READ_REQUEST  1
+
+/* Misc defines */
 #define inline __inline
 
 /* Types */
