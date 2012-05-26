@@ -26,6 +26,7 @@ static NTSTATUS Pl2303UsbUnconfigureDevice(_In_ PDEVICE_OBJECT DeviceObject);
 #pragma alloc_text(PAGE, Pl2303UsbUnconfigureDevice)
 #pragma alloc_text(PAGE, Pl2303UsbStart)
 #pragma alloc_text(PAGE, Pl2303UsbStop)
+#pragma alloc_text(PAGE, Pl2303UsbSetLine)
 #pragma alloc_text(PAGE, Pl2303UsbRead)
 #endif /* defined ALLOC_PRAGMA */
 
@@ -632,6 +633,81 @@ Pl2303UsbStop(
                 __FUNCTION__, DeviceObject);
 
     Status = Pl2303UsbUnconfigureDevice(DeviceObject);
+
+    return Status;
+}
+
+NTSTATUS
+Pl2303UsbSetLine(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ ULONG BaudRate,
+    _In_ UCHAR StopBits,
+    _In_ UCHAR Parity,
+    _In_ UCHAR DataBits)
+{
+    NTSTATUS Status;
+    struct _LINE
+    {
+        ULONG BaudRate;
+        UCHAR StopBits;
+        UCHAR Parity;
+        UCHAR DataBits;
+    } Line;
+    PURB Urb;
+
+    PAGED_CODE();
+
+    Pl2303Debug(         "%s. DeviceObject=%p, BaudRate=%lu, StopBits=%u, Parity=%u, "
+                             "DataBits=%u\n",
+                __FUNCTION__, DeviceObject,    BaudRate,     StopBits,    Parity,
+                              DataBits);
+
+    Urb = ExAllocatePoolWithTag(NonPagedPool,
+                                sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
+                                PL2303_URB_TAG);
+    if (!Urb)
+    {
+        Pl2303Error(         "%s. Allocating URB failed\n",
+                    __FUNCTION__);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    UsbBuildVendorRequest(Urb,
+                          URB_FUNCTION_CLASS_DEVICE,
+                          sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
+                          0,
+                          0,
+                          PL2303_SET_LINE_REQUEST,
+                          0,
+                          0,
+                          &Line,
+                          NULL,
+                          sizeof(Line),
+                          NULL);
+
+    /* TODO: this should probably be nonpaged */
+    Line.BaudRate = BaudRate;
+    Line.StopBits = StopBits;
+    Line.Parity = Parity;
+    Line.DataBits = DataBits;
+
+    Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
+    if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx\n",
+                    __FUNCTION__, Status);
+        ExFreePoolWithTag(Urb, PL2303_URB_TAG);
+        return Status;
+    }
+    if (!NT_SUCCESS(Urb->UrbHeader.Status))
+    {
+        Pl2303Error(         "%s. URB failed with %08lx\n",
+                    __FUNCTION__, Urb->UrbHeader.Status);
+        Status = Urb->UrbHeader.Status;
+        ExFreePoolWithTag(Urb, PL2303_URB_TAG);
+        return Status;
+    }
+    ExFreePoolWithTag(Urb, PL2303_URB_TAG);
 
     return Status;
 }

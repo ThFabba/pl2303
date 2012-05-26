@@ -12,6 +12,7 @@
 #define PL2303_URB_TAG  'U2LP'
 
 /* USB requests */
+#define PL2303_SET_LINE_REQUEST     0x20
 #define PL2303_VENDOR_READ_REQUEST  1
 #define PL2303_VENDOR_WRITE_REQUEST 1
 
@@ -103,6 +104,11 @@ DRIVER_DISPATCH Pl2303DispatchPnp;
 /* usb.c */
 NTSTATUS Pl2303UsbStart(_In_ PDEVICE_OBJECT DeviceObject);
 NTSTATUS Pl2303UsbStop(_In_ PDEVICE_OBJECT DeviceObject);
+NTSTATUS Pl2303UsbSetLine(_In_ PDEVICE_OBJECT DeviceObject,
+                          _In_ ULONG BaudRate,
+                          _In_ UCHAR StopBits,
+                          _In_ UCHAR Parity,
+                          _In_ UCHAR DataBits);
 NTSTATUS Pl2303UsbRead(_In_ PDEVICE_OBJECT DeviceObject,
                        _Out_ PVOID Buffer,
                        _Inout_ PULONG BufferLength);
