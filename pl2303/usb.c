@@ -789,8 +789,7 @@ Pl2303UsbRead(
 
     IoStack = IoGetNextIrpStackLocation(Irp);
     IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
-    RtlZeroMemory(&IoStack->Parameters.DeviceIoControl,
-                  sizeof(IoStack->Parameters.DeviceIoControl));
+    IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB;
     IoStack->Parameters.Others.Argument1 = Urb;
 
     Status = IoSetCompletionRoutineEx(DeviceObject,
