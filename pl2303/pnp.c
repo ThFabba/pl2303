@@ -513,6 +513,7 @@ Pl2303DispatchPnp(
                                __FUNCTION__, Status);
             }
             Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoSkipCurrentIrpStackLocation(Irp);
             Status = IoCallDriver(DeviceExtension->LowerDevice, Irp);
             IoDetachDevice(DeviceExtension->LowerDevice);
             (VOID)Pl2303DestroyDevice(DeviceObject);
