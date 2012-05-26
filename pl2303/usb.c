@@ -201,7 +201,6 @@ Pl2303UsbUnconfigureDevice(
     _In_ PDEVICE_OBJECT DeviceObject)
 {
     NTSTATUS Status;
-    USBD_INTERFACE_LIST_ENTRY InterfaceList[1];
     PURB Urb;
 
     PAGED_CODE();
@@ -209,24 +208,29 @@ Pl2303UsbUnconfigureDevice(
     Pl2303Debug(         "%s. DeviceObject=%p\n",
                 __FUNCTION__, DeviceObject);
 
-    RtlZeroMemory(InterfaceList, sizeof(InterfaceList));
-    Urb = USBD_CreateConfigurationRequestEx(NULL,
-                                            InterfaceList);
+    Urb = ExAllocatePoolWithTag(NonPagedPool,
+                                sizeof(struct _URB_SELECT_CONFIGURATION),
+                                PL2303_URB_TAG);
     if (!Urb)
     {
-        Pl2303Error(         "%s. USBD_CreateConfigurationRequestEx failed\n",
+        Pl2303Error(         "%s. Allocating URB failed\n",
                     __FUNCTION__);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+
+    UsbBuildSelectConfigurationRequest(Urb,
+                                       sizeof(struct _URB_SELECT_CONFIGURATION),
+                                       NULL);
+
     Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
     if (!NT_SUCCESS(Status))
     {
         Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx\n",
                     __FUNCTION__, Status);
-        ExFreePool(Urb);
+        ExFreePoolWithTag(Urb, PL2303_URB_TAG);
         return Status;
     }
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, PL2303_URB_TAG);
 
     return Status;
 }
