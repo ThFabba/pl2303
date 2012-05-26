@@ -113,15 +113,25 @@ Pl2303UsbGetDescriptor(
                                  NULL);
 
     Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Urb->UrbHeader.Status))
+    if (!NT_SUCCESS(Status))
     {
-        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed: %08lx, %08lx\n",
-                    __FUNCTION__, Status, Urb->UrbHeader.Status);
+        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx\n",
+                    __FUNCTION__, Status);
         ExFreePoolWithTag(*Buffer, PL2303_TAG);
         *Buffer = NULL;
         ExFreePoolWithTag(Urb, PL2303_URB_TAG);
         *BufferLength = 0;
-        return !NT_SUCCESS(Status) ? Status : Urb->UrbHeader.Status;
+        return Status;
+    }
+    if (!NT_SUCCESS(Urb->UrbHeader.Status))
+    {
+        Pl2303Error(         "%s. Urb failed with %08lx\n",
+                    __FUNCTION__, Urb->UrbHeader.Status);
+        ExFreePoolWithTag(*Buffer, PL2303_TAG);
+        *Buffer = NULL;
+        ExFreePoolWithTag(Urb, PL2303_URB_TAG);
+        *BufferLength = 0;
+        return Urb->UrbHeader.Status;
     }
 
     *BufferLength = Urb->UrbControlDescriptorRequest.TransferBufferLength;
