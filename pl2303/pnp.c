@@ -194,6 +194,9 @@ Pl2303DestroyDevice(
     ConfigInfo = IoGetConfigurationInformation();
     ConfigInfo->SerialCount--;
 
+    Pl2303Debug(         "%s. New serial port count: %lu\n",
+                __FUNCTION__, ConfigInfo->SerialCount);
+
     if (DeviceExtension->ComPortName.Buffer)
         ExFreePoolWithTag(DeviceExtension->ComPortName.Buffer, PL2303_TAG);
 
