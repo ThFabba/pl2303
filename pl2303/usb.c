@@ -31,7 +31,6 @@ static NTSTATUS NTAPI Pl2303UsbReadCompletion(_In_ PDEVICE_OBJECT DeviceObject,
 #pragma alloc_text(PAGE, Pl2303UsbStart)
 #pragma alloc_text(PAGE, Pl2303UsbStop)
 #pragma alloc_text(PAGE, Pl2303UsbSetLine)
-#pragma alloc_text(PAGE, Pl2303UsbReadCompletion)
 #pragma alloc_text(PAGE, Pl2303UsbRead)
 #endif /* defined ALLOC_PRAGMA */
 
@@ -725,7 +724,7 @@ Pl2303UsbReadCompletion(
 {
     PURB Urb = Context;
 
-    PAGED_CODE();
+    ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
 
     Pl2303Debug(         "%s. DeviceObject=%p, Irp=%p, Context=%p\n",
                 __FUNCTION__, DeviceObject,    Irp,    Context);
