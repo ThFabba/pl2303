@@ -109,6 +109,4 @@ NTSTATUS Pl2303UsbSetLine(_In_ PDEVICE_OBJECT DeviceObject,
                           _In_ UCHAR StopBits,
                           _In_ UCHAR Parity,
                           _In_ UCHAR DataBits);
-NTSTATUS Pl2303UsbRead(_In_ PDEVICE_OBJECT DeviceObject,
-                       _Out_ PVOID Buffer,
-                       _Inout_ PULONG BufferLength);
+NTSTATUS Pl2303UsbRead(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp);

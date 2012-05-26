@@ -16,6 +16,7 @@ static NTSTATUS Pl2303UsbConfigureDevice(_In_ PDEVICE_OBJECT DeviceObject,
                                          _In_ PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptor,
                                          _In_ PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor);
 static NTSTATUS Pl2303UsbUnconfigureDevice(_In_ PDEVICE_OBJECT DeviceObject);
+static IO_COMPLETION_ROUTINE Pl2303UsbReadCompletion;
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, Pl2303UsbSubmitUrb)
@@ -27,6 +28,7 @@ static NTSTATUS Pl2303UsbUnconfigureDevice(_In_ PDEVICE_OBJECT DeviceObject);
 #pragma alloc_text(PAGE, Pl2303UsbStart)
 #pragma alloc_text(PAGE, Pl2303UsbStop)
 #pragma alloc_text(PAGE, Pl2303UsbSetLine)
+#pragma alloc_text(PAGE, Pl2303UsbReadCompletion)
 #pragma alloc_text(PAGE, Pl2303UsbRead)
 #endif /* defined ALLOC_PRAGMA */
 
@@ -712,20 +714,46 @@ Pl2303UsbSetLine(
     return Status;
 }
 
+static
+NTSTATUS
+NTAPI
+Pl2303UsbReadCompletion(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp,
+    _In_ PVOID Context)
+{
+    PURB Urb = Context;
+
+    PAGED_CODE();
+
+    Pl2303Debug(         "%s. DeviceObject=%p, Irp=%p, Context=%p\n",
+                __FUNCTION__, DeviceObject,    Irp,    Context);
+
+    if (Irp->PendingReturned)
+        IoMarkIrpPending(Irp);
+
+    if (NT_SUCCESS(Irp->IoStatus.Status))
+        Irp->IoStatus.Information = Urb->UrbBulkOrInterruptTransfer.TransferBufferLength;
+
+    ExFreePoolWithTag(Urb, PL2303_URB_TAG);
+
+    return STATUS_CONTINUE_COMPLETION;
+}
+
 NTSTATUS
 Pl2303UsbRead(
     _In_ PDEVICE_OBJECT DeviceObject,
-    _Out_ PVOID Buffer,
-    _Inout_ PULONG BufferLength)
+    _In_ PIRP Irp)
 {
     NTSTATUS Status;
     PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     PURB Urb;
+    PIO_STACK_LOCATION IoStack;
 
     PAGED_CODE();
 
-    Pl2303Debug(         "%s. DeviceObject=%p, Buffer=%p, BufferLength=%p\n",
-                __FUNCTION__, DeviceObject,    Buffer,    BufferLength);
+    Pl2303Debug(         "%s. DeviceObject=%p, Irp=%p\n",
+                __FUNCTION__, DeviceObject,    Irp);
 
     Urb = ExAllocatePoolWithTag(NonPagedPool,
                                 sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
@@ -737,36 +765,37 @@ Pl2303UsbRead(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
     UsbBuildInterruptOrBulkTransferRequest(Urb,
                                            sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
                                            DeviceExtension->BulkInPipe,
-                                           Buffer,
-                                           NULL,
-                                           *BufferLength,
+                                           Irp->AssociatedIrp.SystemBuffer,
+                                           Irp->MdlAddress,
+                                           IoStack->Parameters.Read.Length,
                                            USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK,
                                            NULL);
 
-    Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
+    IoStack = IoGetNextIrpStackLocation(Irp);
+    IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
+    RtlZeroMemory(&IoStack->Parameters.DeviceIoControl,
+                  sizeof(IoStack->Parameters.DeviceIoControl));
+    IoStack->Parameters.Others.Argument1 = Urb;
+
+    Status = IoSetCompletionRoutineEx(DeviceObject,
+                                      Irp,
+                                      Pl2303UsbReadCompletion,
+                                      Urb,
+                                      TRUE,
+                                      TRUE,
+                                      TRUE);
     if (!NT_SUCCESS(Status))
     {
-        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx\n",
+        Pl2303Error(         "%s. IoSetCompletionRoutineEx failed with %08lx\n",
                     __FUNCTION__, Status);
-        ExFreePoolWithTag(Urb, PL2303_URB_TAG);
-        *BufferLength = 0;
-        return Status;
-    }
-    if (!NT_SUCCESS(Urb->UrbHeader.Status))
-    {
-        Pl2303Error(         "%s. URB failed with %08lx\n",
-                    __FUNCTION__, Urb->UrbHeader.Status);
-        Status = Urb->UrbHeader.Status;
-        ExFreePoolWithTag(Urb, PL2303_URB_TAG);
-        *BufferLength = 0;
         return Status;
     }
 
-    *BufferLength = Urb->UrbBulkOrInterruptTransfer.TransferBufferLength;
-    ExFreePoolWithTag(Urb, PL2303_URB_TAG);
+    Status = IoCallDriver(DeviceExtension->LowerDevice, Irp);
 
     return Status;
 }
