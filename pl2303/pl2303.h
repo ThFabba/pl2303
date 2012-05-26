@@ -13,6 +13,7 @@
 
 /* USB requests */
 #define PL2303_VENDOR_READ_REQUEST  1
+#define PL2303_VENDOR_WRITE_REQUEST 1
 
 /* Misc defines */
 #define inline __inline

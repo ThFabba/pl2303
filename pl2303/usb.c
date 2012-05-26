@@ -9,6 +9,9 @@ static NTSTATUS Pl2303UsbVendorRead(_In_ PDEVICE_OBJECT DeviceObject,
                                     _Out_ UCHAR *Buffer,
                                     _In_ USHORT Value,
                                     _In_ USHORT Index);
+static NTSTATUS Pl2303UsbVendorWrite(_In_ PDEVICE_OBJECT DeviceObject,
+                                     _In_ USHORT Value,
+                                     _In_ USHORT Index);
 static NTSTATUS Pl2303UsbConfigureDevice(_In_ PDEVICE_OBJECT DeviceObject,
                                          _In_ PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptor,
                                          _In_ PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor);
@@ -18,6 +21,7 @@ static NTSTATUS Pl2303UsbUnconfigureDevice(_In_ PDEVICE_OBJECT DeviceObject);
 #pragma alloc_text(PAGE, Pl2303UsbSubmitUrb)
 #pragma alloc_text(PAGE, Pl2303UsbGetDescriptor)
 #pragma alloc_text(PAGE, Pl2303UsbVendorRead)
+#pragma alloc_text(PAGE, Pl2303UsbVendorWrite)
 #pragma alloc_text(PAGE, Pl2303UsbConfigureDevice)
 #pragma alloc_text(PAGE, Pl2303UsbUnconfigureDevice)
 #pragma alloc_text(PAGE, Pl2303UsbStart)
@@ -214,6 +218,65 @@ Pl2303UsbVendorRead(
                               Urb->UrbControlVendorClassRequest.TransferBufferLength,
                               Buffer[0]);
 
+    ExFreePoolWithTag(Urb, PL2303_URB_TAG);
+
+    return Status;
+}
+
+static
+NTSTATUS
+Pl2303UsbVendorWrite(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ USHORT Value,
+    _In_ USHORT Index)
+{
+    NTSTATUS Status;
+    PURB Urb;
+
+    PAGED_CODE();
+
+    Pl2303Debug(         "%s. DeviceObject=%p, Value=0x%x, Index=0x%x\n",
+                __FUNCTION__, DeviceObject,    Value,      Index);
+
+    Urb = ExAllocatePoolWithTag(NonPagedPool,
+                                sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
+                                PL2303_URB_TAG);
+    if (!Urb)
+    {
+        Pl2303Error(         "%s. Allocating URB failed\n",
+                    __FUNCTION__);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    UsbBuildVendorRequest(Urb,
+                          URB_FUNCTION_VENDOR_DEVICE,
+                          sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
+                          0,
+                          0,
+                          PL2303_VENDOR_WRITE_REQUEST,
+                          Value,
+                          Index,
+                          NULL,
+                          NULL,
+                          0,
+                          NULL);
+
+    Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
+    if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx\n",
+                    __FUNCTION__, Status);
+        ExFreePoolWithTag(Urb, PL2303_URB_TAG);
+        return Status;
+    }
+    if (!NT_SUCCESS(Urb->UrbHeader.Status))
+    {
+        Pl2303Error(         "%s. URB failed with %08lx\n",
+                    __FUNCTION__, Urb->UrbHeader.Status);
+        Status = Urb->UrbHeader.Status;
+        ExFreePoolWithTag(Urb, PL2303_URB_TAG);
+        return Status;
+    }
     ExFreePoolWithTag(Urb, PL2303_URB_TAG);
 
     return Status;
