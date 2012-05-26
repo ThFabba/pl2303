@@ -87,7 +87,7 @@ Pl2303DispatchPower(
 
     PoStartNextPowerIrp(Irp);
     IoSkipCurrentIrpStackLocation(Irp);
-    return PoCallDriver(DeviceObject, Irp);
+    return PoCallDriver(DeviceExtension->LowerDevice, Irp);
 }
 
 static
