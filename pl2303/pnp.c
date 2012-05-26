@@ -4,7 +4,8 @@ static NTSTATUS Pl2303InitializeDevice(_In_ PDEVICE_OBJECT DeviceObject,
                                        _In_ PDEVICE_OBJECT PhysicalDeviceObject);
 static NTSTATUS Pl2303DestroyDevice(_In_ PDEVICE_OBJECT DeviceObject);
 static NTSTATUS Pl2303StartDevice(_In_ PDEVICE_OBJECT DeviceObject);
-static NTSTATUS Pl2303StopDevice(_In_ PDEVICE_OBJECT DeviceObject);
+static NTSTATUS Pl2303StopDevice(_In_ PDEVICE_OBJECT DeviceObject,
+                                 _In_ BOOLEAN SurpriseRemoval);
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, Pl2303InitializeDevice)
@@ -257,7 +258,8 @@ Pl2303StartDevice(
 static
 NTSTATUS
 Pl2303StopDevice(
-    _In_ PDEVICE_OBJECT DeviceObject)
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ BOOLEAN SurpriseRemoval)
 {
     NTSTATUS Status;
     PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
@@ -270,10 +272,11 @@ Pl2303StopDevice(
     if (DeviceExtension->ComPortName.Buffer)
         (VOID)IoDeleteSymbolicLink(&DeviceExtension->ComPortName);
 
-    (VOID)IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
-                                    FALSE);
+    Status = IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,
+                                       FALSE);
 
-    Status = Pl2303UsbStop(DeviceObject);
+    if (!SurpriseRemoval)
+        Status = Pl2303UsbStop(DeviceObject);
 
     return Status;
 }
@@ -497,7 +500,7 @@ Pl2303DispatchPnp(
             break;
         case IRP_MN_SURPRISE_REMOVAL:
             DeviceExtension->PnpState = SurpriseRemovePending;
-            Status = Pl2303StopDevice(DeviceObject);
+            Status = Pl2303StopDevice(DeviceObject, TRUE);
             if (!NT_SUCCESS(Status))
                 Pl2303Warn(         "%s. Pl2303StopDevice failed with %08lx\n",
                            __FUNCTION__, Status);
@@ -507,7 +510,7 @@ Pl2303DispatchPnp(
             DeviceExtension->PnpState = Deleted;
             if (DeviceExtension->PreviousPnpState != SurpriseRemovePending)
             {
-                Status = Pl2303StopDevice(DeviceObject);
+                Status = Pl2303StopDevice(DeviceObject, FALSE);
                 if (!NT_SUCCESS(Status))
                     Pl2303Warn(         "%s. Pl2303StopDevice failed with %08lx\n",
                                __FUNCTION__, Status);
