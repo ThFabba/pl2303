@@ -218,7 +218,7 @@ Pl2303UsbVendorRead(
         return Status;
     }
 
-    Pl2303Debug(         "%s. Vendor Read %x/%x returned length %x: %x\n",
+    Pl2303Debug(         "%s. Vendor Read 0x%x/0x%x returned length %lu: 0x%x\n",
                 __FUNCTION__, Value,
                               Index,
                               Urb->UrbControlVendorClassRequest.TransferBufferLength,
@@ -584,40 +584,83 @@ Pl2303UsbStart(
     ExFreePoolWithTag(Descriptor, PL2303_TAG);
 
     /* TODO: Buffer should probably be nonpaged */
-    /* TODO: failures here should give a debug message */
     Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8484, 0);
     if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbVendorRead[1] failed with %08lx\n",
+                    __FUNCTION__, Status);
         return Status;
+    }
     Status = Pl2303UsbVendorWrite(DeviceObject, 0x0404, 0);
     if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbVendorWrite[2] failed with %08lx\n",
+                    __FUNCTION__, Status);
         return Status;
+    }
     Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8484, 0);
     if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbVendorRead[3] failed with %08lx\n",
+                    __FUNCTION__, Status);
         return Status;
+    }
     Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8383, 0);
     if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbVendorRead[4] failed with %08lx\n",
+                    __FUNCTION__, Status);
         return Status;
+    }
     Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8484, 0);
     if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbVendorRead[5] failed with %08lx\n",
+                    __FUNCTION__, Status);
         return Status;
+    }
     Status = Pl2303UsbVendorWrite(DeviceObject, 0x0404, 0);
     if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbVendorWrite[6] failed with %08lx\n",
+                    __FUNCTION__, Status);
         return Status;
+    }
     Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8484, 0);
     if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbVendorRead[7] failed with %08lx\n",
+                    __FUNCTION__, Status);
         return Status;
+    }
     Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8383, 0);
     if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbVendorRead[8] failed with %08lx\n",
+                    __FUNCTION__, Status);
         return Status;
+    }
     Status = Pl2303UsbVendorWrite(DeviceObject, 0, 1);
     if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbVendorWrite[9] failed with %08lx\n",
+                    __FUNCTION__, Status);
         return Status;
+    }
     Status = Pl2303UsbVendorWrite(DeviceObject, 1, 0);
     if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbVendorWrite[10] failed with %08lx\n",
+                    __FUNCTION__, Status);
         return Status;
+    }
     Status = Pl2303UsbVendorWrite(DeviceObject, 2, 0x44);
     if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbVendorWrite[11] failed with %08lx\n",
+                    __FUNCTION__, Status);
         return Status;
+    }
 
     return Status;
 }
