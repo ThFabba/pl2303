@@ -816,7 +816,11 @@ Pl2303UsbRead(
     {
         Pl2303Error(         "%s. Allocating URB failed\n",
                     __FUNCTION__);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
     }
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -845,6 +849,9 @@ Pl2303UsbRead(
     {
         Pl2303Error(         "%s. IoSetCompletionRoutineEx failed with %08lx\n",
                     __FUNCTION__, Status);
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;
     }
 
