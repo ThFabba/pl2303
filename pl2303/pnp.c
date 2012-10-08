@@ -336,11 +336,6 @@ Pl2303AddDevice(
     RtlZeroMemory(DeviceExtension, sizeof(*DeviceExtension));
     DeviceExtension->DeviceName = DeviceName;
 
-    /* TODO: verify we can do this */
-    DeviceObject->Flags |= DO_POWER_PAGABLE;
-
-    DeviceObject->Flags |= DO_BUFFERED_IO;
-
     ASSERT(DeviceExtension->LowerDevice == NULL);
     Status = IoAttachDeviceToDeviceStackSafe(DeviceObject,
                                              PhysicalDeviceObject,
@@ -353,6 +348,12 @@ Pl2303AddDevice(
         return STATUS_NO_SUCH_DEVICE;
     }
     ASSERT(DeviceExtension->LowerDevice);
+    ASSERT(DeviceExtension->LowerDevice->Flags & DO_POWER_PAGABLE);
+
+    if (DeviceExtension->LowerDevice->Flags & DO_POWER_PAGABLE)
+        DeviceObject->Flags |= DO_POWER_PAGABLE;
+
+    DeviceObject->Flags |= DO_BUFFERED_IO;
 
     Status = Pl2303InitializeDevice(DeviceObject, PhysicalDeviceObject);
     if (!NT_SUCCESS(Status))
