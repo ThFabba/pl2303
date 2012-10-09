@@ -772,9 +772,6 @@ Pl2303UsbReadCompletion(
     Pl2303Debug(         "%s. DeviceObject=%p, Irp=%p, Context=%p\n",
                 __FUNCTION__, DeviceObject,    Irp,    Context);
 
-    if (Irp->PendingReturned)
-        IoMarkIrpPending(Irp);
-
     if (NT_SUCCESS(Irp->IoStatus.Status))
     {
         if (USBD_SUCCESS(Urb->UrbHeader.Status))
@@ -855,7 +852,8 @@ Pl2303UsbRead(
         return Status;
     }
 
-    Status = IoCallDriver(DeviceExtension->LowerDevice, Irp);
+    IoMarkIrpPending(Irp);
+    (VOID)IoCallDriver(DeviceExtension->LowerDevice, Irp);
 
-    return Status;
+    return STATUS_PENDING;
 }
