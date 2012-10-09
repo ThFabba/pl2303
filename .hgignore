@@ -1,7 +1,12 @@
 syntax: regexp
 ^2003Debug/
+^2003Release/
 ^pl2303/2003Debug/
-^pl2303 Package/2003Debug/
+^pl2303/2003Release/
+^pl2303/x64/
+^pl2303/sdv/
+^pl2303 Package/
+^x64/
 
 syntax: glob
 *.opensdf
