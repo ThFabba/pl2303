@@ -662,6 +662,13 @@ Pl2303UsbStart(
         return Status;
     }
 
+    Status = Pl2303UsbSetLine(DeviceObject, 115200, 0, 0, 8);
+    if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbSetLine failed with %08lx\n",
+                    __FUNCTION__, Status);
+    }
+
     return Status;
 }
 
