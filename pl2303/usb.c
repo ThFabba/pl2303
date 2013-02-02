@@ -144,7 +144,7 @@ Pl2303UsbGetDescriptor(
         *BufferLength = 0;
         return Status;
     }
-    if (!NT_SUCCESS(Urb->UrbHeader.Status))
+    if (!USBD_SUCCESS(Urb->UrbHeader.Status))
     {
         Pl2303Error(         "%s. Urb failed with %08lx\n",
                     __FUNCTION__, Urb->UrbHeader.Status);
@@ -209,7 +209,7 @@ Pl2303UsbVendorRead(
         ExFreePoolWithTag(Urb, PL2303_URB_TAG);
         return Status;
     }
-    if (!NT_SUCCESS(Urb->UrbHeader.Status))
+    if (!USBD_SUCCESS(Urb->UrbHeader.Status))
     {
         Pl2303Error(         "%s. URB failed with %08lx\n",
                     __FUNCTION__, Urb->UrbHeader.Status);
@@ -275,7 +275,7 @@ Pl2303UsbVendorWrite(
         ExFreePoolWithTag(Urb, PL2303_URB_TAG);
         return Status;
     }
-    if (!NT_SUCCESS(Urb->UrbHeader.Status))
+    if (!USBD_SUCCESS(Urb->UrbHeader.Status))
     {
         Pl2303Error(         "%s. URB failed with %08lx\n",
                     __FUNCTION__, Urb->UrbHeader.Status);
@@ -584,7 +584,7 @@ Pl2303UsbStart(
     ExFreePoolWithTag(Descriptor, PL2303_TAG);
 
     /* TODO: Buffer should probably be nonpaged */
-    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8484, 0);
+    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8484, 0); // expect: 2
     if (!NT_SUCCESS(Status))
     {
         Pl2303Error(         "%s. Pl2303UsbVendorRead[1] failed with %08lx\n",
@@ -598,21 +598,21 @@ Pl2303UsbStart(
                     __FUNCTION__, Status);
         return Status;
     }
-    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8484, 0);
+    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8484, 0); // expect: 2
     if (!NT_SUCCESS(Status))
     {
         Pl2303Error(         "%s. Pl2303UsbVendorRead[3] failed with %08lx\n",
                     __FUNCTION__, Status);
         return Status;
     }
-    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8383, 0);
+    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8383, 0); // expect: 0
     if (!NT_SUCCESS(Status))
     {
         Pl2303Error(         "%s. Pl2303UsbVendorRead[4] failed with %08lx\n",
                     __FUNCTION__, Status);
         return Status;
     }
-    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8484, 0);
+    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8484, 0); // expect: 2
     if (!NT_SUCCESS(Status))
     {
         Pl2303Error(         "%s. Pl2303UsbVendorRead[5] failed with %08lx\n",
@@ -626,14 +626,14 @@ Pl2303UsbStart(
                     __FUNCTION__, Status);
         return Status;
     }
-    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8484, 0);
+    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8484, 0); // expect: 2
     if (!NT_SUCCESS(Status))
     {
         Pl2303Error(         "%s. Pl2303UsbVendorRead[7] failed with %08lx\n",
                     __FUNCTION__, Status);
         return Status;
     }
-    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8383, 0);
+    Status = Pl2303UsbVendorRead(DeviceObject, Buffer, 0x8383, 0); // expect: 0
     if (!NT_SUCCESS(Status))
     {
         Pl2303Error(         "%s. Pl2303UsbVendorRead[8] failed with %08lx\n",
@@ -654,7 +654,7 @@ Pl2303UsbStart(
                     __FUNCTION__, Status);
         return Status;
     }
-    Status = Pl2303UsbVendorWrite(DeviceObject, 2, 0x44);
+    Status = Pl2303UsbVendorWrite(DeviceObject, 2, 0x44); // non-HX has 0x24 here instead of 0x44
     if (!NT_SUCCESS(Status))
     {
         Pl2303Error(         "%s. Pl2303UsbVendorWrite[11] failed with %08lx\n",
@@ -750,7 +750,7 @@ Pl2303UsbSetLine(
         ExFreePoolWithTag(Urb, PL2303_URB_TAG);
         return Status;
     }
-    if (!NT_SUCCESS(Urb->UrbHeader.Status))
+    if (!USBD_SUCCESS(Urb->UrbHeader.Status))
     {
         Pl2303Error(         "%s. URB failed with %08lx\n",
                     __FUNCTION__, Urb->UrbHeader.Status);
