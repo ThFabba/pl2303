@@ -244,8 +244,6 @@ Pl2303DispatchCreate(
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStack;
 
-    UNREFERENCED_PARAMETER(DeviceObject);
-
     PAGED_CODE();
 
     Pl2303Debug(         "%s. DeviceObject=%p, Irp=%p\n",
@@ -269,8 +267,6 @@ Pl2303DispatchClose(
 {
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStack;
-
-    UNREFERENCED_PARAMETER(DeviceObject);
 
     PAGED_CODE();
 
