@@ -363,7 +363,9 @@ Pl2303UsbConfigureDevice(
     {
         Pl2303Error(         "%s. Invalid endpoint combination\n",
                     __FUNCTION__, Status);
-        NT_ASSERT(FALSE);
+        NT_ASSERT(DeviceExtension->BulkInPipe &&
+                  DeviceExtension->BulkOutPipe &&
+                  DeviceExtension-> InterruptInPipe);
         ExFreePool(Urb);
         return STATUS_DEVICE_CONFIGURATION_ERROR;
     }
