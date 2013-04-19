@@ -405,7 +405,7 @@ PCSTR
 Pl2303GetPnpMinorFunctionName(
     _In_ UCHAR MinorFunction)
 {
-    if (MinorFunction < sizeof(PnpMinorFunctionNames) / sizeof(PnpMinorFunctionNames[0]))
+    if (MinorFunction < RTL_NUMBER_OF(PnpMinorFunctionNames))
         return PnpMinorFunctionNames[MinorFunction];
     return "Unknown";
 }
