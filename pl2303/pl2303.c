@@ -82,7 +82,7 @@ Pl2303DispatchPower(
                  __FUNCTION__, DeviceObject,    Irp);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack->MajorFunction == IRP_MJ_POWER);
+    NT_ASSERT(IoStack->MajorFunction == IRP_MJ_POWER);
 
     DeviceExtension = DeviceObject->DeviceExtension;
 
@@ -119,7 +119,7 @@ Pl2303DispatchSystemControl(
                 __FUNCTION__, DeviceObject,    Irp);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack->MajorFunction == IRP_MJ_SYSTEM_CONTROL);
+    NT_ASSERT(IoStack->MajorFunction == IRP_MJ_SYSTEM_CONTROL);
 
     DeviceExtension = DeviceObject->DeviceExtension;
 
@@ -202,7 +202,7 @@ Pl2303DispatchDeviceControl(
                 __FUNCTION__, DeviceObject,    Irp);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack->MajorFunction == IRP_MJ_DEVICE_CONTROL ||
+    NT_ASSERT(IoStack->MajorFunction == IRP_MJ_DEVICE_CONTROL ||
            IoStack->MajorFunction == IRP_MJ_INTERNAL_DEVICE_CONTROL);
 
     DeviceExtension = DeviceObject->DeviceExtension;
@@ -252,7 +252,7 @@ Pl2303DispatchCreate(
                 __FUNCTION__, DeviceObject,    Irp);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack->MajorFunction == IRP_MJ_CREATE);
+    NT_ASSERT(IoStack->MajorFunction == IRP_MJ_CREATE);
 
     Status = STATUS_SUCCESS;
     Irp->IoStatus.Status = Status;
@@ -278,7 +278,7 @@ Pl2303DispatchClose(
                 __FUNCTION__, DeviceObject,    Irp);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack->MajorFunction == IRP_MJ_CLOSE);
+    NT_ASSERT(IoStack->MajorFunction == IRP_MJ_CLOSE);
 
     Status = STATUS_SUCCESS;
     Irp->IoStatus.Status = Status;
@@ -302,7 +302,7 @@ Pl2303DispatchRead(
                 __FUNCTION__, DeviceObject,    Irp);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack->MajorFunction == IRP_MJ_READ);
+    NT_ASSERT(IoStack->MajorFunction == IRP_MJ_READ);
 
     if (!IoStack->Parameters.Read.Length)
     {

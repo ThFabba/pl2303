@@ -106,7 +106,7 @@ Pl2303InitializeDevice(
                                  &ValueInformationLength);
         if (Status == STATUS_BUFFER_TOO_SMALL)
         {
-            ASSERT(ValueInformationLength != 0);
+            NT_ASSERT(ValueInformationLength != 0);
             ValueInformation = ExAllocatePoolWithTag(PagedPool,
                                                      ValueInformationLength,
                                                      PL2303_TAG);
@@ -132,10 +132,10 @@ Pl2303InitializeDevice(
                 return Status;
             }
             // TODO: handle these properly instead of asserting
-            ASSERT(ValueInformation->Type == REG_SZ);
-            ASSERT(ValueInformation->Data[ValueInformation->DataLength - 1] == 0);
-            ASSERT(ValueInformation->Data[ValueInformation->DataLength - 2] == 0);
-            ASSERT(ValueInformation->DataLength < MAXUSHORT);
+            NT_ASSERT(ValueInformation->Type == REG_SZ);
+            NT_ASSERT(ValueInformation->Data[ValueInformation->DataLength - 1] == 0);
+            NT_ASSERT(ValueInformation->Data[ValueInformation->DataLength - 2] == 0);
+            NT_ASSERT(ValueInformation->DataLength < MAXUSHORT);
             ComPortNameLength = DosDevices.Length + (USHORT)ValueInformation->DataLength;
             ComPortNameBuffer = ExAllocatePoolWithTag(PagedPool,
                                                       ComPortNameLength,
@@ -164,7 +164,7 @@ Pl2303InitializeDevice(
             Status = STATUS_SUCCESS;
         }
     }
-    ASSERT(DeviceExtension->ComPortName.Buffer == ComPortNameBuffer);
+    NT_ASSERT(DeviceExtension->ComPortName.Buffer == ComPortNameBuffer);
 
     Pl2303Debug(         "%s. COM Port name is is '%wZ'\n",
                 __FUNCTION__, &DeviceExtension->ComPortName);
@@ -336,7 +336,7 @@ Pl2303AddDevice(
     RtlZeroMemory(DeviceExtension, sizeof(*DeviceExtension));
     DeviceExtension->DeviceName = DeviceName;
 
-    ASSERT(DeviceExtension->LowerDevice == NULL);
+    NT_ASSERT(DeviceExtension->LowerDevice == NULL);
     Status = IoAttachDeviceToDeviceStackSafe(DeviceObject,
                                              PhysicalDeviceObject,
                                              &DeviceExtension->LowerDevice);
@@ -347,8 +347,8 @@ Pl2303AddDevice(
         IoDeleteDevice(DeviceObject);
         return STATUS_NO_SUCH_DEVICE;
     }
-    ASSERT(DeviceExtension->LowerDevice);
-    ASSERT(DeviceExtension->LowerDevice->Flags & DO_POWER_PAGABLE);
+    NT_ASSERT(DeviceExtension->LowerDevice);
+    NT_ASSERT(DeviceExtension->LowerDevice->Flags & DO_POWER_PAGABLE);
 
     if (DeviceExtension->LowerDevice->Flags & DO_POWER_PAGABLE)
         DeviceObject->Flags |= DO_POWER_PAGABLE;
@@ -426,7 +426,7 @@ Pl2303DispatchPnp(
                 __FUNCTION__, DeviceObject,    Irp);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack->MajorFunction == IRP_MJ_PNP);
+    NT_ASSERT(IoStack->MajorFunction == IRP_MJ_PNP);
 
     DeviceExtension = DeviceObject->DeviceExtension;
 

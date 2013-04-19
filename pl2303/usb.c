@@ -71,7 +71,7 @@ Pl2303UsbSubmitUrb(
     }
 
     IoStack = IoGetNextIrpStackLocation(Irp);
-    ASSERT(IoStack->MajorFunction == IRP_MJ_INTERNAL_DEVICE_CONTROL);
+    NT_ASSERT(IoStack->MajorFunction == IRP_MJ_INTERNAL_DEVICE_CONTROL);
     IoStack->Parameters.Others.Argument1 = Urb;
 
     Status = IoCallDriver(DeviceExtension->LowerDevice, Irp);
@@ -97,9 +97,9 @@ Pl2303UsbGetDescriptor(
     PURB Urb;
 
     PAGED_CODE();
-    ASSERT(Buffer);
-    ASSERT(BufferLength);
-    ASSERT(*BufferLength > 0);
+    NT_ASSERT(Buffer);
+    NT_ASSERT(BufferLength);
+    NT_ASSERT(*BufferLength > 0);
 
     Pl2303Debug(         "%s. DeviceObject=%p, DescriptorType=%u, Buffer=%p, BufferLength=%p\n",
                 __FUNCTION__, DeviceObject,    DescriptorType,    Buffer,    BufferLength);
@@ -363,7 +363,7 @@ Pl2303UsbConfigureDevice(
     {
         Pl2303Error(         "%s. Invalid endpoint combination\n",
                     __FUNCTION__, Status);
-        ASSERT(FALSE);
+        NT_ASSERT(FALSE);
         ExFreePool(Urb);
         return STATUS_DEVICE_CONFIGURATION_ERROR;
     }
@@ -441,7 +441,7 @@ Pl2303UsbStart(
                     __FUNCTION__, Status);
         return Status;
     }
-    ASSERT(DescriptorLength == sizeof(USB_DEVICE_DESCRIPTOR));
+    NT_ASSERT(DescriptorLength == sizeof(USB_DEVICE_DESCRIPTOR));
 
     DeviceDescriptor = Descriptor;
 
@@ -476,8 +476,8 @@ Pl2303UsbStart(
                               DeviceDescriptor->bNumConfigurations);
 
     /* We only support PL2303 HX right now */
-    ASSERT(DeviceDescriptor->bDeviceClass != USB_DEVICE_CLASS_COMMUNICATIONS);
-    ASSERT(DeviceDescriptor->bMaxPacketSize0 == 64);
+    NT_ASSERT(DeviceDescriptor->bDeviceClass != USB_DEVICE_CLASS_COMMUNICATIONS);
+    NT_ASSERT(DeviceDescriptor->bMaxPacketSize0 == 64);
 
     ExFreePoolWithTag(Descriptor, PL2303_TAG);
 
@@ -492,10 +492,10 @@ Pl2303UsbStart(
                     __FUNCTION__, Status);
         return Status;
     }
-    ASSERT(DescriptorLength == sizeof(USB_CONFIGURATION_DESCRIPTOR));
+    NT_ASSERT(DescriptorLength == sizeof(USB_CONFIGURATION_DESCRIPTOR));
 
     ConfigDescriptor = Descriptor;
-    ASSERT(ConfigDescriptor->wTotalLength != 0);
+    NT_ASSERT(ConfigDescriptor->wTotalLength != 0);
     DescriptorLength = ConfigDescriptor->wTotalLength;
     ExFreePoolWithTag(Descriptor, PL2303_TAG);
     Status = Pl2303UsbGetDescriptor(DeviceObject,
@@ -510,7 +510,7 @@ Pl2303UsbStart(
     }
 
     ConfigDescriptor = Descriptor;
-    ASSERT(DescriptorLength == ConfigDescriptor->wTotalLength);
+    NT_ASSERT(DescriptorLength == ConfigDescriptor->wTotalLength);
 
     Pl2303Debug(         "%s. Config descriptor: "
                                                "bLength=%u, "
@@ -774,7 +774,7 @@ Pl2303UsbReadCompletion(
 {
     PURB Urb = Context;
 
-    ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+    NT_ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
 
     Pl2303Debug(         "%s. DeviceObject=%p, Irp=%p, Context=%p\n",
                 __FUNCTION__, DeviceObject,    Irp,    Context);
