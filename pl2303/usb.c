@@ -136,8 +136,8 @@ Pl2303UsbGetDescriptor(
     Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
     if (!NT_SUCCESS(Status))
     {
-        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx\n",
-                    __FUNCTION__, Status);
+        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx, %08lx\n",
+                    __FUNCTION__, Status, Urb->UrbHeader.Status);
         ExFreePoolWithTag(*Buffer, PL2303_TAG);
         *Buffer = NULL;
         ExFreePoolWithTag(Urb, PL2303_URB_TAG);
@@ -204,8 +204,8 @@ Pl2303UsbVendorRead(
     Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
     if (!NT_SUCCESS(Status))
     {
-        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx\n",
-                    __FUNCTION__, Status);
+        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx, %08lx\n",
+                    __FUNCTION__, Status, Urb->UrbHeader.Status);
         ExFreePoolWithTag(Urb, PL2303_URB_TAG);
         return Status;
     }
@@ -270,8 +270,8 @@ Pl2303UsbVendorWrite(
     Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
     if (!NT_SUCCESS(Status))
     {
-        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx\n",
-                    __FUNCTION__, Status);
+        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx, %08lx\n",
+                    __FUNCTION__, Status, Urb->UrbHeader.Status);
         ExFreePoolWithTag(Urb, PL2303_URB_TAG);
         return Status;
     }
@@ -322,8 +322,8 @@ Pl2303UsbConfigureDevice(
     Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
     if (!NT_SUCCESS(Status))
     {
-        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx\n",
-                    __FUNCTION__, Status);
+        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx, %08lx\n",
+                    __FUNCTION__, Status, Urb->UrbHeader.Status);
         ExFreePool(Urb);
         return Status;
     }
@@ -403,8 +403,8 @@ Pl2303UsbUnconfigureDevice(
     Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
     if (!NT_SUCCESS(Status))
     {
-        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx\n",
-                    __FUNCTION__, Status);
+        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx, %08lx\n",
+                    __FUNCTION__, Status, Urb->UrbHeader.Status);
         ExFreePoolWithTag(Urb, PL2303_URB_TAG);
         return Status;
     }
@@ -745,8 +745,8 @@ Pl2303UsbSetLine(
     Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
     if (!NT_SUCCESS(Status))
     {
-        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx\n",
-                    __FUNCTION__, Status);
+        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx, %08lx\n",
+                    __FUNCTION__, Status, Urb->UrbHeader.Status);
         ExFreePoolWithTag(Urb, PL2303_URB_TAG);
         return Status;
     }
