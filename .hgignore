@@ -1,8 +1,20 @@
 syntax: regexp
 ^2003Debug/
 ^2003Release/
+^VistaDebug/
+^VistaRelease/
+^Win7Debug/
+^Win7Release/
+^Win8Debug/
+^Win8Release/
 ^pl2303/2003Debug/
 ^pl2303/2003Release/
+^pl2303/VistaDebug/
+^pl2303/VistaRelease/
+^pl2303/Win7Debug/
+^pl2303/Win7Release/
+^pl2303/Win8Debug/
+^pl2303/Win8Release/
 ^pl2303/x64/
 ^pl2303/sdv/
 ^pl2303 Package/
