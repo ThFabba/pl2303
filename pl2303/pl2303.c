@@ -195,6 +195,7 @@ Pl2303DispatchDeviceControl(
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStack;
     PDEVICE_EXTENSION DeviceExtension;
+    ULONG IoControlCode;
 
     PAGED_CODE();
 
@@ -217,12 +218,13 @@ Pl2303DispatchDeviceControl(
         return Status;
     }
 
-    switch (IoStack->Parameters.DeviceIoControl.IoControlCode)
+    IoControlCode = IoStack->Parameters.DeviceIoControl.IoControlCode;
+    switch (IoControlCode)
     {
         case IOCTL_SERIAL_CLEAR_STATS:
         default:
             Pl2303Debug(         "%s. DeviceControl %x, code %s (%08lx)\n",
-                        __FUNCTION__, IoStack->MajorFunction, SerialGetIoctlName(IoStack->Parameters.DeviceIoControl.IoControlCode), IoStack->Parameters.DeviceIoControl.IoControlCode);
+                        __FUNCTION__, IoStack->MajorFunction, SerialGetIoctlName(IoControlCode), IoControlCode);
     }
 
     Status = STATUS_NOT_IMPLEMENTED;
