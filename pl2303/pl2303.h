@@ -12,9 +12,9 @@
 #define PL2303_URB_TAG  'U2LP'
 
 /* USB requests */
+#define PL2303_VENDOR_READ_REQUEST  0x01
+#define PL2303_VENDOR_WRITE_REQUEST 0x01
 #define PL2303_SET_LINE_REQUEST     0x20
-#define PL2303_VENDOR_READ_REQUEST  1
-#define PL2303_VENDOR_WRITE_REQUEST 1
 
 /* Misc defines */
 #if defined(_MSC_VER) && !defined(inline)
