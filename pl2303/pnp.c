@@ -132,11 +132,17 @@ Pl2303InitializeDevice(
                 RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
                 return Status;
             }
-            // TODO: handle these properly instead of asserting
-            NT_ASSERT(ValueInformation->Type == REG_SZ);
-            NT_ASSERT(ValueInformation->Data[ValueInformation->DataLength - 1] == 0);
-            NT_ASSERT(ValueInformation->Data[ValueInformation->DataLength - 2] == 0);
-            NT_ASSERT(ValueInformation->DataLength < MAXUSHORT);
+            if (ValueInformation->Type != REG_SZ ||
+                ValueInformation->Data[ValueInformation->DataLength - 1] != 0 ||
+                ValueInformation->Data[ValueInformation->DataLength - 2] != 0 ||
+                ValueInformation->DataLength >= MAXUSHORT)
+            {
+                Pl2303Error("%s. PortName registry key is invalid\n",
+                    __FUNCTION__);
+                ExFreePoolWithTag(ValueInformation, PL2303_TAG);
+                RtlFreeUnicodeString(&DeviceExtension->InterfaceLinkName);
+                return STATUS_INVALID_PARAMETER;
+            }
             ComPortNameLength = DosDevices.Length + (USHORT)ValueInformation->DataLength;
             ComPortNameBuffer = ExAllocatePoolWithTag(PagedPool,
                                                       ComPortNameLength,
