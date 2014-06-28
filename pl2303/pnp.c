@@ -87,7 +87,7 @@ Pl2303InitializeDevice(
         ValueInformation->Type == REG_DWORD &&
         ValueInformation->DataLength == sizeof(ULONG))
     {
-        SkipExternalNaming = *(PCULONG)ValueInformation->Data;
+        SkipExternalNaming = *(const ULONG *)ValueInformation->Data;
     }
     else
     {
