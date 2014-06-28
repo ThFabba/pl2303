@@ -78,7 +78,8 @@ Pl2303UsbSubmitUrb(
 
     if (Status == STATUS_PENDING)
     {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        NT_ASSERT(Status == STATUS_SUCCESS);
         Status = IoStatus.Status;
     }
 
