@@ -17,7 +17,9 @@
 #define PL2303_VENDOR_WRITE_REQUEST 1
 
 /* Misc defines */
+#if defined(_MSC_VER) && !defined(inline)
 #define inline __inline
+#endif
 
 /* Types */
 typedef enum _DEVICE_PNP_STATE
