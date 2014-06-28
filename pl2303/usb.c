@@ -324,7 +324,7 @@ Pl2303UsbConfigureDevice(
     {
         Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx, %08lx\n",
                     __FUNCTION__, Status, Urb->UrbHeader.Status);
-        ExFreePool(Urb);
+        ExFreePoolWithTag(Urb, 0);
         return Status;
     }
 
@@ -366,11 +366,11 @@ Pl2303UsbConfigureDevice(
         NT_ASSERT(DeviceExtension->BulkInPipe &&
                   DeviceExtension->BulkOutPipe &&
                   DeviceExtension-> InterruptInPipe);
-        ExFreePool(Urb);
+        ExFreePoolWithTag(Urb, 0);
         return STATUS_DEVICE_CONFIGURATION_ERROR;
     }
 
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, 0);
 
     return Status;
 }
