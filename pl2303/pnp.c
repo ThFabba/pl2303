@@ -106,6 +106,7 @@ Pl2303InitializeDevice(
                                  &ValueInformationLength);
         if (Status == STATUS_BUFFER_TOO_SMALL)
         {
+#pragma prefast(suppress: __WARNING_USING_VARIABLE_FROM_FAILED_FUNCTION_CALL, "ZwQueryValueKey sets ResultLength if buffer too small")
             NT_ASSERT(ValueInformationLength != 0);
             ValueInformation = ExAllocatePoolWithTag(PagedPool,
                                                      ValueInformationLength,

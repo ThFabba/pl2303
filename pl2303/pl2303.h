@@ -21,6 +21,10 @@
 #define inline __inline
 #endif
 
+#ifndef __WARNING_USING_VARIABLE_FROM_FAILED_FUNCTION_CALL
+#define __WARNING_USING_VARIABLE_FROM_FAILED_FUNCTION_CALL 6102
+#endif
+
 /* Types */
 typedef enum _DEVICE_PNP_STATE
 {
