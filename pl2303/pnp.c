@@ -256,6 +256,15 @@ Pl2303StartDevice(
                                             FALSE);
             return Status;
         }
+        
+        /* FIXME */
+#if 0
+        Status = RtlWriteRegistryValue(RTL_REGISTRY_DEVICEMAP,
+                                       SERIAL_DEVICE_MAP,
+                                       DeviceExtension->DeviceName.Buffer,
+                                       DeviceExtension->ComPortName.Buffer + xxx,
+                                       DeviceExtension->ComPortName.Length - xxx * sizeof(WCHAR));
+#endif
     }
 
     return Status;
