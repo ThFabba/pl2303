@@ -20,6 +20,10 @@ _Function_class_(IO_COMPLETION_ROUTINE)
 static NTSTATUS NTAPI Pl2303UsbReadCompletion(_In_ PDEVICE_OBJECT DeviceObject,
                                               _In_ PIRP Irp,
                                               _In_reads_(sizeof(URB)) PVOID Context);
+_Function_class_(IO_COMPLETION_ROUTINE)
+static NTSTATUS NTAPI Pl2303UsbWriteCompletion(_In_ PDEVICE_OBJECT DeviceObject,
+                                               _In_ PIRP Irp,
+                                               _In_reads_(sizeof(URB)) PVOID Context);
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, Pl2303UsbSubmitUrb)
@@ -32,6 +36,7 @@ static NTSTATUS NTAPI Pl2303UsbReadCompletion(_In_ PDEVICE_OBJECT DeviceObject,
 #pragma alloc_text(PAGE, Pl2303UsbStop)
 #pragma alloc_text(PAGE, Pl2303UsbSetLine)
 #pragma alloc_text(PAGE, Pl2303UsbRead)
+#pragma alloc_text(PAGE, Pl2303UsbWrite)
 #endif /* defined ALLOC_PRAGMA */
 
 static
@@ -848,6 +853,109 @@ Pl2303UsbRead(
     Status = IoSetCompletionRoutineEx(DeviceObject,
                                       Irp,
                                       Pl2303UsbReadCompletion,
+                                      Urb,
+                                      TRUE,
+                                      TRUE,
+                                      TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. IoSetCompletionRoutineEx failed with %08lx\n",
+                    __FUNCTION__, Status);
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
+    IoMarkIrpPending(Irp);
+    (VOID)IoCallDriver(DeviceExtension->LowerDevice, Irp);
+
+    return STATUS_PENDING;
+}
+
+
+_Function_class_(IO_COMPLETION_ROUTINE)
+static
+NTSTATUS
+NTAPI
+Pl2303UsbWriteCompletion(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp,
+    _In_reads_(sizeof(URB)) PVOID Context)
+{
+    PURB Urb = Context;
+
+    NT_ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+
+    Pl2303Debug(         "%s. DeviceObject=%p, Irp=%p, Context=%p\n",
+                __FUNCTION__, DeviceObject,    Irp,    Context);
+
+    if (NT_SUCCESS(Irp->IoStatus.Status))
+    {
+        if (USBD_SUCCESS(Urb->UrbHeader.Status))
+            Irp->IoStatus.Information = Urb->UrbBulkOrInterruptTransfer.TransferBufferLength;
+        else
+            Pl2303Warn(         "%s. URB failed with %08lx\n",
+                       __FUNCTION__, Urb->UrbHeader.Status);
+    }
+    else
+    {
+        Pl2303Warn(         "%s. IRP failed with %08lx\n",
+                   __FUNCTION__, Irp->IoStatus.Status);
+    }
+
+    ExFreePoolWithTag(Urb, PL2303_URB_TAG);
+
+    return STATUS_CONTINUE_COMPLETION;
+}
+
+NTSTATUS
+Pl2303UsbWrite(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
+{
+    NTSTATUS Status;
+    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    PURB Urb;
+    PIO_STACK_LOCATION IoStack;
+
+    PAGED_CODE();
+
+    Pl2303Debug(         "%s. DeviceObject=%p, Irp=%p\n",
+                __FUNCTION__, DeviceObject,    Irp);
+
+    Urb = ExAllocatePoolWithTag(NonPagedPool,
+                                sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
+                                PL2303_URB_TAG);
+    if (!Urb)
+    {
+        Pl2303Error(         "%s. Allocating URB failed\n",
+                    __FUNCTION__);
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    UsbBuildInterruptOrBulkTransferRequest(Urb,
+                                           sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
+                                           DeviceExtension->BulkOutPipe,
+                                           Irp->AssociatedIrp.SystemBuffer,
+                                           NULL,
+                                           IoStack->Parameters.Write.Length,
+                                           USBD_TRANSFER_DIRECTION_OUT,
+                                           NULL);
+
+    IoStack = IoGetNextIrpStackLocation(Irp);
+    IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
+    IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB;
+    IoStack->Parameters.Others.Argument1 = Urb;
+
+    Status = IoSetCompletionRoutineEx(DeviceObject,
+                                      Irp,
+                                      Pl2303UsbWriteCompletion,
                                       Urb,
                                       TRUE,
                                       TRUE,

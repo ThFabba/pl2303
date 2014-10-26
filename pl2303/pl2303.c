@@ -16,6 +16,8 @@ __drv_dispatchType(IRP_MJ_CLOSE)
 static DRIVER_DISPATCH Pl2303DispatchClose;
 __drv_dispatchType(IRP_MJ_READ)
 static DRIVER_DISPATCH Pl2303DispatchRead;
+__drv_dispatchType(IRP_MJ_WRITE)
+static DRIVER_DISPATCH Pl2303DispatchWrite;
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(INIT, DriverEntry)
@@ -26,6 +28,7 @@ static DRIVER_DISPATCH Pl2303DispatchRead;
 #pragma alloc_text(PAGE, Pl2303DispatchCreate)
 #pragma alloc_text(PAGE, Pl2303DispatchClose)
 #pragma alloc_text(PAGE, Pl2303DispatchRead)
+#pragma alloc_text(PAGE, Pl2303DispatchWrite)
 #endif /* defined ALLOC_PRAGMA */
 
 NTSTATUS
@@ -49,6 +52,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_CREATE] = Pl2303DispatchCreate;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = Pl2303DispatchClose;
     DriverObject->MajorFunction[IRP_MJ_READ] = Pl2303DispatchRead;
+    DriverObject->MajorFunction[IRP_MJ_WRITE] = Pl2303DispatchWrite;
 
     return STATUS_SUCCESS;
 }
@@ -314,6 +318,42 @@ Pl2303DispatchRead(
     if (!NT_SUCCESS(Status))
     {
         Pl2303Error(         "%s. Pl2303UsbRead failed with %08lx\n",
+                    __FUNCTION__, Status);
+    }
+
+    return Status;
+}
+
+static
+NTSTATUS
+NTAPI
+Pl2303DispatchWrite(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PIO_STACK_LOCATION IoStack;
+
+    PAGED_CODE();
+
+    Pl2303Debug(         "%s. DeviceObject=%p, Irp=%p\n",
+                __FUNCTION__, DeviceObject,    Irp);
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    NT_ASSERT(IoStack->MajorFunction == IRP_MJ_WRITE);
+
+    if (!IoStack->Parameters.Write.Length)
+    {
+        Status = STATUS_SUCCESS;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
+    Status = Pl2303UsbWrite(DeviceObject, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbWrite failed with %08lx\n",
                     __FUNCTION__, Status);
     }
 

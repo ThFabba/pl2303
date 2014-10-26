@@ -116,3 +116,4 @@ NTSTATUS Pl2303UsbSetLine(_In_ PDEVICE_OBJECT DeviceObject,
                           _In_ UCHAR Parity,
                           _In_ UCHAR DataBits);
 NTSTATUS Pl2303UsbRead(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp);
+NTSTATUS Pl2303UsbWrite(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp);
