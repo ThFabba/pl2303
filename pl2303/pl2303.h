@@ -102,6 +102,11 @@ Pl2303Error(
     va_end(Arguments);
 }
 
+/* ioctl.c */
+__drv_dispatchType(IRP_MJ_DEVICE_CONTROL)
+__drv_dispatchType(IRP_MJ_INTERNAL_DEVICE_CONTROL)
+DRIVER_DISPATCH Pl2303DispatchDeviceControl;
+
 /* pnp.c */
 DRIVER_ADD_DEVICE Pl2303AddDevice;
 __drv_dispatchType(IRP_MJ_PNP)
