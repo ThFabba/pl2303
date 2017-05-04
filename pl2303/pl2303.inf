@@ -23,7 +23,8 @@ pl2303.sys=1
 %ManufacturerName%=Models,NT$ARCH$
 
 [Models.NT$ARCH$]
-%DeviceDesc%=DefaultInstall.NT,USB\VID_067B&PID_2303
+%DeviceDescD%=DefaultInstall.NT,USB\VID_067B&PID_2303&REV_0400
+%DeviceDescGeneric%=DefaultInstall.NT,USB\VID_067B&PID_2303
 
 [DefaultInstall.NT]
 CopyFiles=@pl2303.sys
@@ -42,5 +43,6 @@ ServiceBinary=%12%\pl2303.sys
 ManufacturerName="Prolific"
 DiskName="pl2303 Source Disk"
 ProviderName="Thomas Faber"
-DeviceDesc="Prolific PL2303 USB to Serial Converter"
+DeviceDescGeneric="Prolific PL2303 USB to Serial Converter"
+DeviceDescD="Prolific PL2303 HX (Rev. D) USB to Serial Converter"
 ServiceDesc="Prolific serial port driver"
