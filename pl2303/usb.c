@@ -432,11 +432,14 @@ Pl2303UsbStart(
     PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptor;
     PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
     UCHAR Buffer[1];
+    PDEVICE_EXTENSION DeviceExtension;
 
     PAGED_CODE();
 
     Pl2303Debug(         "%s. DeviceObject=%p\n",
                 __FUNCTION__, DeviceObject);
+
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     DescriptorLength = sizeof(USB_DEVICE_DESCRIPTOR);
     Status = Pl2303UsbGetDescriptor(DeviceObject,
@@ -670,13 +673,6 @@ Pl2303UsbStart(
         return Status;
     }
 
-    Status = Pl2303UsbSetLine(DeviceObject, 115200, 0, 0, 8);
-    if (!NT_SUCCESS(Status))
-    {
-        Pl2303Error(         "%s. Pl2303UsbSetLine failed with %08lx\n",
-                    __FUNCTION__, Status);
-    }
-
     return Status;
 }
 
@@ -749,6 +745,64 @@ Pl2303UsbSetLine(
     Line.StopBits = StopBits;
     Line.Parity = Parity;
     Line.DataBits = DataBits;
+
+    Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
+    if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbSubmitUrb failed with %08lx, %08lx\n",
+                    __FUNCTION__, Status, Urb->UrbHeader.Status);
+        ExFreePoolWithTag(Urb, PL2303_URB_TAG);
+        return Status;
+    }
+    if (!USBD_SUCCESS(Urb->UrbHeader.Status))
+    {
+        Pl2303Error(         "%s. URB failed with %08lx\n",
+                    __FUNCTION__, Urb->UrbHeader.Status);
+        Status = Urb->UrbHeader.Status;
+        ExFreePoolWithTag(Urb, PL2303_URB_TAG);
+        return Status;
+    }
+    ExFreePoolWithTag(Urb, PL2303_URB_TAG);
+
+    return Status;
+}
+
+NTSTATUS
+Pl2303UsbSetControlLines(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ USHORT DtrRts)
+{
+    NTSTATUS Status;
+    PURB Urb;
+
+    PAGED_CODE();
+
+    Pl2303Debug(         "%s. DeviceObject=%p, DtrRts=%u\n",
+                __FUNCTION__, DeviceObject,    DtrRts);
+
+    Urb = ExAllocatePoolWithTag(NonPagedPool,
+                                sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
+                                PL2303_URB_TAG);
+    if (!Urb)
+    {
+        Pl2303Error(         "%s. Allocating URB failed\n",
+                    __FUNCTION__);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    NT_ASSERT((DtrRts & ~(SERIAL_DTR_STATE | SERIAL_RTS_STATE)) == 0);
+    UsbBuildVendorRequest(Urb,
+                          URB_FUNCTION_CLASS_DEVICE,
+                          sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
+                          USBD_TRANSFER_DIRECTION_OUT,
+                          0,
+                          PL2303_SET_CONTROL_REQUEST,
+                          DtrRts,
+                          0,
+                          NULL,
+                          NULL,
+                          0,
+                          NULL);
 
     Status = Pl2303UsbSubmitUrb(DeviceObject, Urb);
     if (!NT_SUCCESS(Status))

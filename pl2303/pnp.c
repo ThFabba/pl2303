@@ -38,6 +38,8 @@ Pl2303InitializeDevice(
     Pl2303Debug(         "%s. DeviceObject=%p, PhysicalDeviceObject=%p\n",
                 __FUNCTION__, DeviceObject,    PhysicalDeviceObject);
 
+    ExInitializeFastMutex(&DeviceExtension->LineStateMutex);
+
     Status = IoRegisterDeviceInterface(PhysicalDeviceObject,
                                        &GUID_DEVINTERFACE_COMPORT,
                                        NULL,
@@ -233,6 +235,23 @@ Pl2303StartDevice(
         Pl2303Error(         "%s. Pl2303UsbStart failed with %08lx\n",
                     __FUNCTION__, Status);
         return Status;
+    }
+
+    DeviceExtension->BaudRate = 115200;
+    DeviceExtension->StopBits = 0;
+    DeviceExtension->Parity = 0;
+    DeviceExtension->DataBits = 0;
+    DeviceExtension->Chars.XonChar = 0x11;
+    DeviceExtension->Chars.XoffChar = 0x13;
+    DeviceExtension->HandFlow.ControlHandShake = SERIAL_DTR_CONTROL;
+    DeviceExtension->HandFlow.FlowReplace = SERIAL_RTS_CONTROL;
+    DeviceExtension->HandFlow.XonLimit = 2048;
+    DeviceExtension->HandFlow.XoffLimit = 512;
+    Status = Pl2303SetLine(DeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        Pl2303Error(         "%s. Pl2303UsbSetLine failed with %08lx\n",
+                    __FUNCTION__, Status);
     }
 
     Status = IoSetDeviceInterfaceState(&DeviceExtension->InterfaceLinkName,

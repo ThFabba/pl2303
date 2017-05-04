@@ -15,6 +15,7 @@
 #define PL2303_VENDOR_READ_REQUEST  0x01
 #define PL2303_VENDOR_WRITE_REQUEST 0x01
 #define PL2303_SET_LINE_REQUEST     0x20
+#define PL2303_SET_CONTROL_REQUEST  0x22
 
 /* Misc defines */
 #if defined(_MSC_VER) && !defined(inline)
@@ -48,6 +49,14 @@ typedef struct _DEVICE_EXTENSION
     USBD_PIPE_HANDLE BulkInPipe;
     USBD_PIPE_HANDLE BulkOutPipe;
     USBD_PIPE_HANDLE InterruptInPipe;
+    FAST_MUTEX LineStateMutex;
+    ULONG BaudRate;
+    UCHAR StopBits;
+    UCHAR Parity;
+    UCHAR DataBits;
+    SERIAL_CHARS Chars;
+    SERIAL_HANDFLOW HandFlow;
+    USHORT DtrRts;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 /* Debugging functions */
@@ -106,6 +115,7 @@ Pl2303Error(
 __drv_dispatchType(IRP_MJ_DEVICE_CONTROL)
 __drv_dispatchType(IRP_MJ_INTERNAL_DEVICE_CONTROL)
 DRIVER_DISPATCH Pl2303DispatchDeviceControl;
+NTSTATUS Pl2303SetLine(_In_ PDEVICE_OBJECT DeviceObject);
 
 /* pnp.c */
 DRIVER_ADD_DEVICE Pl2303AddDevice;
@@ -120,5 +130,7 @@ NTSTATUS Pl2303UsbSetLine(_In_ PDEVICE_OBJECT DeviceObject,
                           _In_ UCHAR StopBits,
                           _In_ UCHAR Parity,
                           _In_ UCHAR DataBits);
+NTSTATUS Pl2303UsbSetControlLines(_In_ PDEVICE_OBJECT DeviceObject,
+                                  _In_ USHORT DtrRts);
 NTSTATUS Pl2303UsbRead(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp);
 NTSTATUS Pl2303UsbWrite(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp);
