@@ -490,6 +490,7 @@
     <ClCompile Include="ioctl.c" />
     <ClCompile Include="pl2303.c" />
     <ClCompile Include="pnp.c" />
+    <ClCompile Include="queue.c" />
     <ClCompile Include="usb.c" />
   </ItemGroup>
   <ItemGroup>

@@ -38,6 +38,13 @@ typedef enum _DEVICE_PNP_STATE
     Deleted
 } DEVICE_PNP_STATE, *PDEVICE_PNP_STATE;
 
+typedef struct _QUEUE
+{
+    IO_CSQ Csq;
+    LIST_ENTRY QueueHead;
+    KSPIN_LOCK QueueSpinLock;
+} QUEUE, *PQUEUE;
+
 typedef struct _DEVICE_EXTENSION
 {
     PDEVICE_OBJECT LowerDevice;
